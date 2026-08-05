@@ -2,8 +2,8 @@
 // Choose Account -> Choose Recipient -> Enter Amount -> Review -> Success
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nexa_bank/models/account.dart';
 import '../../accounts/bloc/account_bloc.dart';
-import '../../accounts/data/account_repository.dart';
 import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -16,7 +16,8 @@ class TransferScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TransferBloc, TransferState>(
-      listenWhen: (_, curr) => curr is TransferSuccess || curr is TransferFailed,
+      listenWhen: (_, curr) =>
+          curr is TransferSuccess || curr is TransferFailed,
       listener: (context, state) {
         if (state is TransferSuccess) {
           _showSuccessDialog(context, state.result);
@@ -51,14 +52,20 @@ class TransferScreen extends StatelessWidget {
         _BeneficiaryStep(beneficiaries: beneficiaries, isLoading: isLoading),
       TransferEnteringAmount(:final beneficiary) =>
         _AmountStep(beneficiary: beneficiary),
-      TransferReadyToSubmit(:final account, :final beneficiary, :final amount, :final reference) =>
+      TransferReadyToSubmit(
+        :final account,
+        :final beneficiary,
+        :final amount,
+        :final reference
+      ) =>
         _ReviewStep(
             account: account,
             beneficiary: beneficiary,
             amount: amount,
             reference: reference),
       TransferInProgress() => const _LoadingStep(),
-      TransferSuccess() || TransferFailed() =>
+      TransferSuccess() ||
+      TransferFailed() =>
         const Center(child: Text('Done')),
       // TODO: Handle this case.
       TransferState() => throw UnimplementedError(),
@@ -70,7 +77,8 @@ class TransferScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.dialog)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.dialog)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -79,7 +87,8 @@ class TransferScreen extends StatelessWidget {
               height: 72,
               decoration: const BoxDecoration(
                   color: AppColors.successBackground, shape: BoxShape.circle),
-              child: const Icon(Icons.check_circle, color: AppColors.success, size: 44),
+              child: const Icon(Icons.check_circle,
+                  color: AppColors.success, size: 44),
             ),
             const SizedBox(height: 16),
             const Text('Transfer Successful!',
@@ -134,7 +143,8 @@ class _AccountStep extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Text('Send from', style: Theme.of(context).textTheme.titleLarge),
+              child: Text('Send from',
+                  style: Theme.of(context).textTheme.titleLarge),
             ),
             Expanded(
               child: ListView.separated(
@@ -183,7 +193,8 @@ class _AccountTile extends StatelessWidget {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppRadius.input),
                 ),
-                child: const Icon(Icons.account_balance_wallet, color: AppColors.primary),
+                child: const Icon(Icons.account_balance_wallet,
+                    color: AppColors.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -191,16 +202,20 @@ class _AccountTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(account.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 15)),
                     const SizedBox(height: 2),
                     Text(account.accountNumber,
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 12)),
                   ],
                 ),
               ),
               Text(
-                CurrencyFormatter.format(account.availableBalance, currency: account.currency),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                CurrencyFormatter.format(account.balance,
+                    currency: account.currency),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(width: 4),
               Icon(Icons.chevron_right, color: Colors.grey[400]),
@@ -216,7 +231,8 @@ class _AccountTile extends StatelessWidget {
 class _BeneficiaryStep extends StatelessWidget {
   final List<Beneficiary> beneficiaries;
   final bool isLoading;
-  const _BeneficiaryStep({required this.beneficiaries, required this.isLoading});
+  const _BeneficiaryStep(
+      {required this.beneficiaries, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +307,8 @@ class _AmountStepState extends State<_AmountStep> {
           Text('Sending to', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 4),
           Text(widget.beneficiary.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Text(widget.beneficiary.bankName,
               style: TextStyle(color: Colors.grey[500])),
           const SizedBox(height: 40),
@@ -326,10 +343,13 @@ class _AmountStepState extends State<_AmountStep> {
           ElevatedButton(
             onPressed: _amount > 0
                 ? () {
-                    context.read<TransferBloc>().add(TransferAmountSet(_amount));
+                    context
+                        .read<TransferBloc>()
+                        .add(TransferAmountSet(_amount));
                     if (_referenceController.text.isNotEmpty) {
-                      context.read<TransferBloc>().add(
-                          TransferReferenceSet(_referenceController.text));
+                      context
+                          .read<TransferBloc>()
+                          .add(TransferReferenceSet(_referenceController.text));
                     }
                   }
                 : null,
@@ -360,7 +380,8 @@ class _ReviewStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Review Transfer', style: Theme.of(context).textTheme.titleLarge),
+          Text('Review Transfer',
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
           _ReviewRow('From', '${account.name} (${account.accountNumber})'),
           _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),

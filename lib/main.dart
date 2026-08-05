@@ -8,15 +8,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nexa_bank/firebase_options.dart';
 
 import 'core/auth/auth_service.dart';
-import 'core/firebase/account_firestore_service.dart';
-import 'core/firebase/transaction_firestore_service.dart';
+import 'services/account_firestore_service.dart';
+import 'services/transaction_firestore_service.dart';
+import 'services/user_firestore_service.dart';
 import 'core/network/dio_client.dart';
 import 'core/storage/secure_token_store.dart';
 import 'core/theme/app_theme.dart';
 import 'features/accounts/bloc/account_bloc.dart';
-import 'features/accounts/data/account_repository.dart';
-import 'features/firestore_test/data/account_firestore_repository.dart';
-import 'features/firestore_test/data/transaction_firestore_repository.dart';
+import 'repositories/account_firestore_repository.dart';
+import 'repositories/transaction_firestore_repository.dart';
+import 'repositories/user_firestore_repository.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/insights/bloc/insights_bloc.dart';
 import 'features/transfers/bloc/transfer_bloc.dart';
@@ -50,38 +51,39 @@ void main() async {
   );
 
   // Repositories
-  final accountRepository = RemoteAccountRepository(apiClient);
   final transferRepository = RemoteTransferRepository(apiClient);
   final accountFirestoreService = AccountFirestoreService();
   final transactionFirestoreService = TransactionFirestoreService();
+  final userFirestoreService = UserFirestoreService();
   final accountFirestoreRepository =
       AccountFirestoreRepository(accountFirestoreService);
   final transactionFirestoreRepository =
       TransactionFirestoreRepository(transactionFirestoreService);
+  final userFirestoreRepository = UserFirestoreRepository(userFirestoreService);
 
   runApp(NexaBankApp(
     authService: authService,
-    accountRepository: accountRepository,
     transferRepository: transferRepository,
     accountFirestoreRepository: accountFirestoreRepository,
     transactionFirestoreRepository: transactionFirestoreRepository,
+    userFirestoreRepository: userFirestoreRepository,
   ));
 }
 
 class NexaBankApp extends StatelessWidget {
   final AuthService authService;
-  final AccountRepository accountRepository;
   final TransferRepository transferRepository;
   final AccountFirestoreRepository accountFirestoreRepository;
   final TransactionFirestoreRepository transactionFirestoreRepository;
+  final UserFirestoreRepository userFirestoreRepository;
 
   const NexaBankApp({
     super.key,
     required this.authService,
-    required this.accountRepository,
     required this.transferRepository,
     required this.accountFirestoreRepository,
     required this.transactionFirestoreRepository,
+    required this.userFirestoreRepository,
   });
 
   @override
@@ -92,14 +94,17 @@ class NexaBankApp extends StatelessWidget {
           create: (_) => AuthBloc(authService)..add(const AuthCheckRequested()),
         ),
         BlocProvider(
-          create: (_) => AccountBloc(accountRepository),
+          create: (_) => AccountBloc(
+            accountFirestoreRepository,
+            transactionFirestoreRepository,
+          ),
           lazy: false,
         ),
         BlocProvider(
           create: (_) => TransferBloc(transferRepository),
         ),
         BlocProvider(
-          create: (_) => InsightsBloc(accountRepository),
+          create: (_) => InsightsBloc(transactionFirestoreRepository),
         ),
       ],
       child: Builder(
@@ -108,6 +113,7 @@ class NexaBankApp extends StatelessWidget {
             authBloc: context.read<AuthBloc>(),
             accountFirestoreRepository: accountFirestoreRepository,
             transactionFirestoreRepository: transactionFirestoreRepository,
+            userFirestoreRepository: userFirestoreRepository,
           );
 
           return MaterialApp.router(

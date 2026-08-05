@@ -1,16 +1,21 @@
 // NexaBank — Firestore Test ViewModel
 import 'package:flutter/foundation.dart';
-import '../../accounts/data/account_repository.dart';
-import '../data/account_firestore_repository.dart';
-import '../data/transaction_firestore_repository.dart';
+import 'package:nexa_bank/models/account.dart';
+import 'package:nexa_bank/models/transaction.dart';
+import 'package:nexa_bank/models/user.dart';
+import '../../../repositories/account_firestore_repository.dart';
+import '../../../repositories/transaction_firestore_repository.dart';
+import '../../../repositories/user_firestore_repository.dart';
 
 class FirestoreTestViewModel extends ChangeNotifier {
   final AccountFirestoreRepository accountRepository;
   final TransactionFirestoreRepository transactionRepository;
+  final UserFirestoreRepository userRepository;
 
   FirestoreTestViewModel({
     required this.accountRepository,
     required this.transactionRepository,
+    required this.userRepository,
   });
 
   bool isLoading = false;
@@ -18,8 +23,11 @@ class FirestoreTestViewModel extends ChangeNotifier {
   List<Account> accounts = [];
   Account? selectedAccount;
   List<Transaction> transactions = [];
+  List<User> users = [];
+  User? selectedUser;
 
   Future<void> initialize() async {
+    await reloadUsers();
     await reloadAccounts();
   }
 
@@ -43,9 +51,28 @@ class FirestoreTestViewModel extends ChangeNotifier {
     });
   }
 
+  Future<void> reloadUsers() async {
+    await _runSafe(() async {
+      users = await userRepository.fetchUsers();
+      if (selectedUser != null) {
+        selectedUser = users.isEmpty
+            ? null
+            : users.firstWhere(
+                (user) => user.id == selectedUser!.id,
+                orElse: () => users.first,
+              );
+      }
+    });
+  }
+
   Future<void> selectAccount(Account account) async {
     selectedAccount = account;
     await loadTransactions(account.id);
+    notifyListeners();
+  }
+
+  void selectUser(User user) {
+    selectedUser = user;
     notifyListeners();
   }
 
@@ -116,6 +143,37 @@ class FirestoreTestViewModel extends ChangeNotifier {
     await _runSafe(() async {
       await transactionRepository.deleteTransaction(accountId, transactionId);
       transactions.removeWhere((item) => item.id == transactionId);
+    });
+  }
+
+  Future<void> createUser(User user) async {
+    await _runSafe(() async {
+      final created = await userRepository.createUser(user);
+      users.add(created);
+      selectedUser = created;
+    });
+  }
+
+  Future<void> updateUser(User user) async {
+    await _runSafe(() async {
+      await userRepository.updateUser(user);
+      final index = users.indexWhere((item) => item.id == user.id);
+      if (index >= 0) {
+        users[index] = user;
+      }
+      if (selectedUser?.id == user.id) {
+        selectedUser = user;
+      }
+    });
+  }
+
+  Future<void> deleteUser(String userId) async {
+    await _runSafe(() async {
+      await userRepository.deleteUser(userId);
+      users.removeWhere((item) => item.id == userId);
+      if (selectedUser?.id == userId) {
+        selectedUser = users.isNotEmpty ? users.first : null;
+      }
     });
   }
 

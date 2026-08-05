@@ -4,8 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:nexa_bank/models/account.dart';
+import 'package:nexa_bank/models/transaction.dart' as txn_model;
 import '../../accounts/bloc/account_bloc.dart';
-import '../../accounts/data/account_repository.dart';
 import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -135,14 +136,16 @@ class _AccountCardsSection extends StatelessWidget {
           height: 200,
           child: PageView.builder(
             controller: PageController(viewportFraction: 0.88),
-            itemCount: state.accounts.length,
+            itemCount: state.accounts.whereType<Account>().length,
             onPageChanged: (i) {
+              final accounts = state.accounts.whereType<Account>().toList();
               context.read<AccountBloc>().add(
-                    AccountSelected(state.accounts[i].id),
+                    AccountSelected(accounts[i].id),
                   );
             },
             itemBuilder: (context, i) {
-              final acc = state.accounts[i];
+              final accounts = state.accounts.whereType<Account>().toList();
+              final acc = accounts[i];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: _AccountCard(
@@ -157,19 +160,22 @@ class _AccountCardsSection extends StatelessWidget {
         // Page indicator dots
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: state.accounts.asMap().entries.map((e) {
+          children: state.accounts
+              .whereType<Account>()
+              .toList()
+              .asMap()
+              .entries
+              .map((e) {
+            final accounts = state.accounts.whereType<Account>().toList();
+            final selectedIndex = state.selectedAccountId == null
+                ? -1
+                : accounts.indexWhere((a) => a.id == state.selectedAccountId);
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: e.key ==
-                      state.accounts
-                          .indexWhere((a) => a.id == state.selectedAccountId)
-                  ? 20
-                  : 6,
+              width: e.key == selectedIndex ? 20 : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: e.key ==
-                        state.accounts
-                            .indexWhere((a) => a.id == state.selectedAccountId)
+                color: e.key == selectedIndex
                     ? AppColors.primary
                     : Colors.grey[300],
                 borderRadius: BorderRadius.circular(3),
@@ -190,7 +196,7 @@ class _AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.accountCardPalette;
-    final color = colors[account.type == 'savings' ? 1 : 0];
+    final color = colors[account.type == AccountType.savings ? 1 : 0];
 
     return Container(
       decoration: BoxDecoration(
@@ -233,7 +239,7 @@ class _AccountCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Available: ${CurrencyFormatter.format(account.availableBalance, currency: account.currency)}',
+            'Balance: ${CurrencyFormatter.format(account.balance, currency: account.currency)}',
             style: const TextStyle(color: Colors.white60, fontSize: 12),
           ),
           const Spacer(),
@@ -338,7 +344,7 @@ class _TransactionHeader extends StatelessWidget {
 }
 
 class _TransactionList extends StatelessWidget {
-  final List<Transaction> transactions;
+  final List<txn_model.Transaction> transactions;
   const _TransactionList({required this.transactions});
 
   @override
@@ -362,7 +368,7 @@ class _TransactionList extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  final Transaction txn;
+  final txn_model.Transaction txn;
   const _TransactionTile({required this.txn});
 
   static const _categoryIcons = {
@@ -378,7 +384,7 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCredit = txn.isCredit;
+    final isCredit = txn.type == txn_model.TransactionType.credit;
     final icon = _categoryIcons[txn.category] ?? Icons.receipt;
     final amountColor = isCredit ? Colors.green[700]! : Colors.black87;
 
@@ -394,10 +400,10 @@ class _TransactionTile extends StatelessWidget {
         ),
         child: Icon(icon, color: Colors.grey[600], size: 22),
       ),
-      title: Text(txn.merchantName ?? txn.description,
+      title: Text(txn.description,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
       subtitle: Text(
-        DateFormat('MMM d, h:mm a').format(txn.bookingDate),
+        DateFormat('MMM d, h:mm a').format(txn.dateCreated),
         style: TextStyle(color: Colors.grey[500], fontSize: 12),
       ),
       trailing: Column(

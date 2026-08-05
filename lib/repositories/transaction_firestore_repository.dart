@@ -1,6 +1,6 @@
 // NexaBank — Firestore Transaction Repository
-import '../../../core/firebase/transaction_firestore_service.dart';
-import '../../accounts/data/account_repository.dart';
+import '../services/transaction_firestore_service.dart';
+import '../models/transaction.dart';
 
 class TransactionFirestoreRepository {
   final TransactionFirestoreService _service;

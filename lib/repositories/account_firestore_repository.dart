@@ -1,6 +1,6 @@
 // NexaBank — Firestore Account Repository
-import '../../../core/firebase/account_firestore_service.dart';
-import '../../accounts/data/account_repository.dart';
+import '../services/account_firestore_service.dart';
+import '../models/account.dart';
 
 class AccountFirestoreRepository {
   final AccountFirestoreService _service;

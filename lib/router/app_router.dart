@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
-import '../features/firestore_test/data/account_firestore_repository.dart';
-import '../features/firestore_test/data/transaction_firestore_repository.dart';
+import '../repositories/account_firestore_repository.dart';
+import '../repositories/transaction_firestore_repository.dart';
+import '../repositories/user_firestore_repository.dart';
 import '../features/firestore_test/ui/firestore_test_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
@@ -17,9 +18,10 @@ class AppRouter {
     required AuthBloc authBloc,
     required AccountFirestoreRepository accountFirestoreRepository,
     required TransactionFirestoreRepository transactionFirestoreRepository,
+    required UserFirestoreRepository userFirestoreRepository,
   }) {
     return GoRouter(
-      initialLocation: '/home',
+      initialLocation: '/firestore-test',
       refreshListenable: _BlocListenable(authBloc),
       redirect: (context, state) {
         final authState = authBloc.state;
@@ -47,6 +49,7 @@ class AppRouter {
               builder: (_, __) => FirestoreTestScreen(
                 accountRepository: accountFirestoreRepository,
                 transactionRepository: transactionFirestoreRepository,
+                userRepository: userFirestoreRepository,
               ),
             ),
           ],

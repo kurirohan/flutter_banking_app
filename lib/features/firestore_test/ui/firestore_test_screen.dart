@@ -1,17 +1,23 @@
 // NexaBank — Firestore Test Screen
 import 'package:flutter/material.dart';
-import '../../accounts/data/account_repository.dart';
-import '../data/account_firestore_repository.dart';
-import '../data/transaction_firestore_repository.dart';
+import 'package:nexa_bank/models/account.dart';
+import 'package:nexa_bank/models/transaction.dart';
+import 'package:nexa_bank/models/user.dart';
+import '../../../repositories/account_firestore_repository.dart';
+import '../../../repositories/transaction_firestore_repository.dart';
+import '../../../repositories/user_firestore_repository.dart';
 import '../viewmodels/firestore_test_view_model.dart';
 
 class FirestoreTestScreen extends StatefulWidget {
   final AccountFirestoreRepository accountRepository;
   final TransactionFirestoreRepository transactionRepository;
+  final UserFirestoreRepository userRepository;
+
   const FirestoreTestScreen({
     super.key,
     required this.accountRepository,
     required this.transactionRepository,
+    required this.userRepository,
   });
 
   @override
@@ -27,6 +33,7 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
     viewModel = FirestoreTestViewModel(
       accountRepository: widget.accountRepository,
       transactionRepository: widget.transactionRepository,
+      userRepository: widget.userRepository,
     );
     viewModel.initialize();
   }
@@ -57,6 +64,10 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
                 _buildAccountsHeader(),
                 const SizedBox(height: 12),
                 ..._buildAccountCards(),
+                const SizedBox(height: 24),
+                _buildUsersHeader(),
+                const SizedBox(height: 12),
+                ..._buildUserCards(),
                 const SizedBox(height: 24),
                 _buildTransactionsHeader(),
                 if (viewModel.selectedAccount == null)
@@ -151,6 +162,61 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
     }).toList();
   }
 
+  Widget _buildUsersHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('Users',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.add),
+          label: const Text('Add User'),
+          onPressed: () => _showUserForm(context),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildUserCards() {
+    if (viewModel.users.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.only(top: 12),
+          child: Text('No users found. Create one to start testing Firestore.'),
+        ),
+      ];
+    }
+
+    return viewModel.users.map((user) {
+      final selected = viewModel.selectedUser?.id == user.id;
+      return Card(
+        color: selected ? Colors.green.shade50 : null,
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ListTile(
+          selected: selected,
+          title: Text('${user.firstName} ${user.lastName}'),
+          subtitle: Text(user.username),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit user',
+                onPressed: () => _showUserForm(context, user: user),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: 'Delete user',
+                onPressed: () => _confirmDeleteUser(user),
+              ),
+            ],
+          ),
+          onTap: () => viewModel.selectUser(user),
+        ),
+      );
+    }).toList();
+  }
+
   Widget _buildTransactionsHeader() {
     final accountName = viewModel.selectedAccount?.name ?? 'Account';
     return Column(
@@ -226,11 +292,11 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
         TextEditingController(text: account?.accountNumber ?? '');
     final balanceController =
         TextEditingController(text: account?.balance.toString() ?? '0');
-    final availableBalanceController = TextEditingController(
-        text: account?.availableBalance.toString() ?? '0');
     final currencyController =
         TextEditingController(text: account?.currency ?? 'PHP');
-    String type = account?.type ?? 'current';
+    AccountType type = account?.type ?? AccountType.current;
+    final userIdController = TextEditingController(text: account?.userId ?? '');
+    bool isLocked = account?.isLocked ?? false;
 
     await showDialog<void>(
       context: context,
@@ -252,18 +318,31 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
                     decoration: const InputDecoration(labelText: 'Balance'),
                     keyboardType: TextInputType.number),
                 TextField(
-                    controller: availableBalanceController,
-                    decoration:
-                        const InputDecoration(labelText: 'Available Balance'),
-                    keyboardType: TextInputType.number),
-                TextField(
                     controller: currencyController,
                     decoration: const InputDecoration(labelText: 'Currency')),
-                DropdownButtonFormField<String>(
+                TextField(
+                    controller: userIdController,
+                    decoration: const InputDecoration(labelText: 'User Id')),
+                SwitchListTile(
+                  title: const Text('Locked'),
+                  value: isLocked,
+                  onChanged: (value) {
+                    setState(() {
+                      isLocked = value;
+                    });
+                  },
+                ),
+                DropdownButtonFormField<AccountType>(
                   initialValue: type,
                   items: const [
-                    DropdownMenuItem(value: 'current', child: Text('Current')),
-                    DropdownMenuItem(value: 'savings', child: Text('Savings')),
+                    DropdownMenuItem(
+                      value: AccountType.current,
+                      child: Text('Current'),
+                    ),
+                    DropdownMenuItem(
+                      value: AccountType.savings,
+                      child: Text('Savings'),
+                    ),
                   ],
                   decoration: const InputDecoration(labelText: 'Type'),
                   onChanged: (value) {
@@ -281,14 +360,16 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
               onPressed: () {
                 final created = Account(
                   id: account?.id ?? '',
-                  name: nameController.text.trim(),
+                  userId: userIdController.text.trim().isNotEmpty
+                      ? userIdController.text.trim()
+                      : 'user_001',
                   accountNumber: numberController.text.trim(),
-                  balance: double.tryParse(balanceController.text.trim()) ?? 0,
-                  availableBalance:
-                      double.tryParse(availableBalanceController.text.trim()) ??
-                          0,
-                  currency: currencyController.text.trim(),
+                  name: nameController.text.trim(),
                   type: type,
+                  currency: currencyController.text.trim(),
+                  balance: double.tryParse(balanceController.text.trim()) ?? 0,
+                  isLocked: isLocked,
+                  dateCreated: account?.dateCreated ?? DateTime.now(),
                 );
 
                 if (account == null) {
@@ -316,13 +397,11 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
         TextEditingController(text: transaction?.description ?? '');
     final amountController =
         TextEditingController(text: transaction?.amount.toString() ?? '0');
-    final merchantController =
-        TextEditingController(text: transaction?.merchantName ?? '');
     final categoryController =
         TextEditingController(text: transaction?.category ?? 'Other');
     final currencyController =
         TextEditingController(text: transaction?.currency ?? 'PHP');
-    String type = transaction?.type ?? 'DEBIT';
+    TransactionType type = transaction?.type ?? TransactionType.debit;
 
     await showDialog<void>(
       context: context,
@@ -343,19 +422,22 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
                     decoration: const InputDecoration(labelText: 'Amount'),
                     keyboardType: TextInputType.number),
                 TextField(
-                    controller: merchantController,
-                    decoration: const InputDecoration(labelText: 'Merchant')),
-                TextField(
                     controller: categoryController,
                     decoration: const InputDecoration(labelText: 'Category')),
                 TextField(
                     controller: currencyController,
                     decoration: const InputDecoration(labelText: 'Currency')),
-                DropdownButtonFormField<String>(
+                DropdownButtonFormField<TransactionType>(
                   initialValue: type,
                   items: const [
-                    DropdownMenuItem(value: 'DEBIT', child: Text('DEBIT')),
-                    DropdownMenuItem(value: 'CREDIT', child: Text('CREDIT')),
+                    DropdownMenuItem(
+                      value: TransactionType.debit,
+                      child: Text('DEBIT'),
+                    ),
+                    DropdownMenuItem(
+                      value: TransactionType.credit,
+                      child: Text('CREDIT'),
+                    ),
                   ],
                   decoration: const InputDecoration(labelText: 'Type'),
                   onChanged: (value) {
@@ -373,17 +455,16 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
               onPressed: () {
                 final created = Transaction(
                   id: transaction?.id ?? '',
+                  sourceAcctId: transaction?.sourceAcctId,
+                  destAcctId: accountId,
                   type: type,
                   amount: double.tryParse(amountController.text.trim()) ?? 0,
                   currency: currencyController.text.trim(),
-                  bookingDate: DateTime.now(),
                   description: descriptionController.text.trim(),
-                  merchantName: merchantController.text.trim().isEmpty
-                      ? null
-                      : merchantController.text.trim(),
                   category: categoryController.text.trim().isEmpty
                       ? 'Other'
                       : categoryController.text.trim(),
+                  dateCreated: transaction?.dateCreated ?? DateTime.now(),
                 );
                 if (transaction == null) {
                   viewModel.createTransaction(accountId, created);
@@ -444,6 +525,102 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
     if (remove == true && viewModel.selectedAccount != null) {
       await viewModel.deleteTransaction(
           viewModel.selectedAccount!.id, transaction.id);
+    }
+  }
+
+  Future<void> _showUserForm(BuildContext context, {User? user}) async {
+    final firstNameController =
+        TextEditingController(text: user?.firstName ?? '');
+    final lastNameController =
+        TextEditingController(text: user?.lastName ?? '');
+    final usernameController =
+        TextEditingController(text: user?.username ?? '');
+    final passwordController =
+        TextEditingController(text: user?.passwordHash ?? '');
+    final dobController = TextEditingController(
+        text: user?.dateOfBirth.toIso8601String().split('T').first ??
+            DateTime.now().toIso8601String().split('T').first);
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(user == null ? 'Create User' : 'Update User'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                    controller: firstNameController,
+                    decoration: const InputDecoration(labelText: 'First Name')),
+                TextField(
+                    controller: lastNameController,
+                    decoration: const InputDecoration(labelText: 'Last Name')),
+                TextField(
+                    controller: usernameController,
+                    decoration: const InputDecoration(labelText: 'Username')),
+                TextField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(labelText: 'Password')),
+                TextField(
+                    controller: dobController,
+                    decoration:
+                        const InputDecoration(labelText: 'Date of Birth'),
+                    keyboardType: TextInputType.datetime),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                final created = User(
+                  id: user?.id ?? '',
+                  firstName: firstNameController.text.trim(),
+                  lastName: lastNameController.text.trim(),
+                  username: usernameController.text.trim(),
+                  passwordHash: passwordController.text.trim(),
+                  dateOfBirth: DateTime.tryParse(dobController.text.trim()) ??
+                      DateTime.now(),
+                  dateCreated: user?.dateCreated ?? DateTime.now(),
+                );
+
+                if (user == null) {
+                  viewModel.createUser(created);
+                } else {
+                  viewModel.updateUser(created);
+                }
+                Navigator.pop(context);
+              },
+              child: Text(user == null ? 'Create' : 'Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteUser(User user) async {
+    final remove = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete User'),
+          content: Text('Delete user "${user.username}"?'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete')),
+          ],
+        );
+      },
+    );
+    if (remove == true) {
+      await viewModel.deleteUser(user.id);
     }
   }
 }

@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:nexa_bank/models/account.dart';
+import 'package:nexa_bank/models/transaction.dart' as txn_model;
 import '../bloc/account_bloc.dart';
-import '../data/account_repository.dart';
 import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -55,16 +56,19 @@ class _AccountTabs extends StatelessWidget {
         children: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             child: Row(
-              children: state.accounts.map((acc) {
+              children: state.accounts.cast<Account>().map((acc) {
                 final isSelected = acc.id == state.selectedAccountId;
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: ChoiceChip(
                     label: Text(acc.name),
                     selected: isSelected,
-                    onSelected: (_) => context.read<AccountBloc>().add(AccountSelected(acc.id)),
+                    onSelected: (_) => context
+                        .read<AccountBloc>()
+                        .add(AccountSelected(acc.id)),
                     selectedColor: AppColors.chipSelected,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : null,
@@ -77,19 +81,23 @@ class _AccountTabs extends StatelessWidget {
           ),
           if (state.selectedAccount != null) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
               child: Row(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Balance', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text('Balance',
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 12)),
                       Text(
                         CurrencyFormatter.format(
                           state.selectedAccount!.balance,
                           currency: state.selectedAccount!.currency,
                         ),
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -97,13 +105,15 @@ class _AccountTabs extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Available', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text('Type',
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 12)),
                       Text(
-                        CurrencyFormatter.format(
-                          state.selectedAccount!.availableBalance,
-                          currency: state.selectedAccount!.currency,
-                        ),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        state.selectedAccount!.type == AccountType.savings
+                            ? 'Savings'
+                            : 'Current',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -118,7 +128,7 @@ class _AccountTabs extends StatelessWidget {
 }
 
 class _TransactionHistory extends StatelessWidget {
-  final List<Transaction> transactions;
+  final List<txn_model.Transaction> transactions;
   const _TransactionHistory({required this.transactions});
 
   @override
@@ -128,9 +138,9 @@ class _TransactionHistory extends StatelessWidget {
     }
 
     // Group by date
-    final grouped = <String, List<Transaction>>{};
+    final grouped = <String, List<txn_model.Transaction>>{};
     for (final txn in transactions) {
-      final key = DateFormat('MMMM d, yyyy').format(txn.bookingDate);
+      final key = DateFormat('MMMM d, yyyy').format(txn.dateCreated);
       grouped.putIfAbsent(key, () => []).add(txn);
     }
 
@@ -145,7 +155,8 @@ class _TransactionHistory extends StatelessWidget {
             // Sticky date header
             Container(
               color: Colors.grey[100],
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
               width: double.infinity,
               child: Text(date,
                   style: TextStyle(
@@ -163,16 +174,18 @@ class _TransactionHistory extends StatelessWidget {
 }
 
 class _TxnRow extends StatelessWidget {
-  final Transaction txn;
+  final txn_model.Transaction txn;
   const _TxnRow({required this.txn});
 
   @override
   Widget build(BuildContext context) {
-    final isCredit = txn.isCredit;
+    final isCredit = txn.type == txn_model.TransactionType.credit;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
       leading: Container(
-        width: 44, height: 44,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: isCredit ? Colors.green.withOpacity(0.1) : Colors.grey[100],
           shape: BoxShape.circle,
@@ -183,12 +196,13 @@ class _TxnRow extends StatelessWidget {
           size: 20,
         ),
       ),
-      title: Text(txn.merchantName ?? txn.description,
+      title: Text(txn.description,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
       subtitle: Text(txn.category,
           style: TextStyle(color: Colors.grey[500], fontSize: 12)),
       trailing: Text(
-        CurrencyFormatter.formatSigned(txn.amount, isCredit: isCredit, currency: txn.currency),
+        CurrencyFormatter.formatSigned(txn.amount,
+            isCredit: isCredit, currency: txn.currency),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 15,
