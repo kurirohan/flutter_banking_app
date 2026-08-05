@@ -1,4 +1,4 @@
-// NexaBank — Shared currency formatting utility
+// PayMaye — Shared currency formatting utility
 //
 // Centralizes currency display so a locale/currency change (e.g. swapping
 // PHP for another currency later) only requires editing this file.

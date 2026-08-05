@@ -1,4 +1,4 @@
-// NexaBank — 5-Step Transfer Flow UI
+// PayMaye — 5-Step Transfer Flow UI
 // Choose Account -> Choose Recipient -> Enter Amount -> Review -> Success
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +46,6 @@ class TransferScreen extends StatelessWidget {
                 'Sent ${CurrencyFormatter.format(state.amount, currency: state.account.currency)} to ${state.beneficiary.name}',
               ),
               backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
             ),
           );
 
@@ -59,11 +58,12 @@ class TransferScreen extends StatelessWidget {
       },
       builder: (context, state) {
         return Scaffold(
+          backgroundColor: AppColors.lightBackground,
           appBar: AppBar(
             title: const Text('Send Money'),
             leading: state is! TransferSelectingAccount
                 ? IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () =>
                         context.read<TransferBloc>().add(const TransferReset()),
                   )
@@ -111,30 +111,41 @@ class TransferScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 76,
+              height: 76,
               decoration: const BoxDecoration(
                   color: AppColors.successBackground, shape: BoxShape.circle),
-              child: const Icon(Icons.check_circle, color: AppColors.success, size: 44),
+              child: const Icon(Icons.check_rounded, color: AppColors.success, size: 44),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text('Transfer Successful!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: AppSpacing.sm),
+            const Text('Transfer successful!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               result.rail == 'INSTANT'
                   ? 'Funds will arrive within 2 minutes'
                   : 'Funds will arrive within 24 hours',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: const TextStyle(color: AppColors.inkMuted),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Divider(),
-            _ReceiptRow('Amount', CurrencyFormatter.format(state.amount, currency: state.account.currency)),
-            _ReceiptRow('From', state.account.name),
-            _ReceiptRow('To', state.beneficiary.name),
-            if (state.reference != null) _ReceiptRow('Note', state.reference!),
-            _ReceiptRow('Reference', reference),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.fog,
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+              child: Column(
+                children: [
+                  _ReceiptRow('Amount', CurrencyFormatter.format(state.amount, currency: state.account.currency)),
+                  _ReceiptRow('From', state.account.name),
+                  _ReceiptRow('To', state.beneficiary.name),
+                  if (state.reference != null) _ReceiptRow('Note', state.reference!),
+                  _ReceiptRow('Reference', reference, isLast: true),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [
@@ -146,7 +157,7 @@ class TransferScreen extends StatelessWidget {
                 context.read<TransferBloc>().add(const TransferReset());
                 context.go('/accounts');
               },
-              child: const Text('View Transaction History'),
+              child: const Text('View transaction history'),
             ),
           ),
           SizedBox(
@@ -156,7 +167,7 @@ class TransferScreen extends StatelessWidget {
                 Navigator.pop(dialogContext);
                 context.read<TransferBloc>().add(const TransferReset());
               },
-              child: const Text('Send Another Transfer'),
+              child: const Text('Send another transfer'),
             ),
           ),
         ],
@@ -168,21 +179,27 @@ class TransferScreen extends StatelessWidget {
 class _ReceiptRow extends StatelessWidget {
   final String label;
   final String value;
-  const _ReceiptRow(this.label, this.value);
+  final bool isLast;
+  const _ReceiptRow(this.label, this.value, {this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      decoration: isLast
+          ? null
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.outline)),
+            ),
       child: Row(
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Text(label, style: const TextStyle(color: AppColors.inkMuted, fontSize: 13)),
           const Spacer(),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
             ),
           ),
         ],
@@ -201,7 +218,7 @@ class _AccountStep extends StatelessWidget {
     return BlocBuilder<AccountBloc, AccountState>(
       builder: (context, state) {
         if (state is! AccountLoaded) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: AppColors.violet));
         }
         if (state.accounts.isEmpty) {
           return const Center(child: Text('No accounts available'));
@@ -210,14 +227,14 @@ class _AccountStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Text('Send from', style: Theme.of(context).textTheme.titleLarge),
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 itemCount: state.accounts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                 itemBuilder: (context, i) {
                   final acc = state.accounts[i];
                   return _AccountTile(
@@ -244,43 +261,43 @@ class _AccountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.grey[50],
+      color: Colors.white,
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.fog,
                   borderRadius: BorderRadius.circular(AppRadius.input),
                 ),
-                child: const Icon(Icons.account_balance_wallet, color: AppColors.primary),
+                child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.violet),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(account.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.ink)),
                     const SizedBox(height: 2),
                     Text(account.accountNumber,
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        style: const TextStyle(color: AppColors.inkFaint, fontSize: 12)),
                   ],
                 ),
               ),
               Text(
                 CurrencyFormatter.format(account.availableBalance, currency: account.currency),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.ink),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.inkFaint),
             ],
           ),
         ),
@@ -301,41 +318,70 @@ class _BeneficiaryStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Text('Send to', style: Theme.of(context).textTheme.titleLarge),
         ),
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           child: TextField(
             decoration: InputDecoration(
               hintText: 'Search beneficiaries',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search_rounded),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: AppColors.violet))
               : beneficiaries.isEmpty
                   ? const Center(child: Text('No beneficiaries yet'))
-                  : ListView.builder(
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                       itemCount: beneficiaries.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, i) {
                         final b = beneficiaries[i];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                            child: Text(b.name[0],
-                                style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold)),
+                        final pair = AppColors.pastelPalette[i % AppColors.pastelPalette.length];
+                        return Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                            onTap: () => context
+                                .read<TransferBloc>()
+                                .add(TransferBeneficiarySelected(b)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 22,
+                                    backgroundColor: pair[0],
+                                    child: Text(b.name[0],
+                                        style: TextStyle(
+                                            color: pair[1], fontWeight: FontWeight.w800)),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(b.name,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w700, color: AppColors.ink)),
+                                        const SizedBox(height: 2),
+                                        Text('${b.bankName} · ${b.accountNumber}',
+                                            style: const TextStyle(
+                                                color: AppColors.inkFaint, fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded, color: AppColors.inkFaint),
+                                ],
+                              ),
+                            ),
                           ),
-                          title: Text(b.name),
-                          subtitle: Text('${b.bankName} · ${b.accountNumber}'),
-                          onTap: () => context
-                              .read<TransferBloc>()
-                              .add(TransferBeneficiarySelected(b)),
                         );
                       },
                     ),
@@ -361,28 +407,29 @@ class _AmountStepState extends State<_AmountStep> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sending to', style: Theme.of(context).textTheme.bodyMedium),
+          const Text('Sending to', style: TextStyle(color: AppColors.inkMuted, fontSize: 13)),
           const SizedBox(height: 4),
           Text(widget.beneficiary.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
           Text(widget.beneficiary.bankName,
-              style: TextStyle(color: Colors.grey[500])),
-          const SizedBox(height: 40),
+              style: const TextStyle(color: AppColors.inkFaint)),
+          const SizedBox(height: AppSpacing.huge),
           Center(
             child: Text(
               CurrencyFormatter.format(_amount),
               style: const TextStyle(
-                  fontSize: 48, fontWeight: FontWeight.bold, letterSpacing: -1),
+                  fontSize: 46, fontWeight: FontWeight.w800, letterSpacing: -1, color: AppColors.ink),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
           TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontWeight: FontWeight.w700),
             decoration: const InputDecoration(
               labelText: 'Amount (PHP)',
               prefixText: '₱ ',
@@ -391,7 +438,7 @@ class _AmountStepState extends State<_AmountStep> {
               setState(() => _amount = double.tryParse(v) ?? 0);
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           TextField(
             controller: _referenceController,
             decoration: const InputDecoration(
@@ -433,30 +480,42 @@ class _ReviewStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Review Transfer', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 24),
-          _ReviewRow('From', '${account.name} (${account.accountNumber})'),
-          _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
-          _ReviewRow('To', beneficiary.name),
-          _ReviewRow('Bank', beneficiary.bankName),
-          _ReviewRow('Account', beneficiary.accountNumber),
-          if (reference != null) _ReviewRow('Reference', reference!),
-          _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours'),
+          Text('Review transfer', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.xl),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+            ),
+            child: Column(
+              children: [
+                _ReviewRow('From', '${account.name} (${account.accountNumber})'),
+                _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
+                _ReviewRow('To', beneficiary.name),
+                _ReviewRow('Bank', beneficiary.bankName),
+                _ReviewRow('Account', beneficiary.accountNumber),
+                if (reference != null) _ReviewRow('Reference', reference!),
+                _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours', isLast: true),
+              ],
+            ),
+          ),
           const Spacer(),
           const Text(
             'By tapping Confirm, you authorise this payment.',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(color: AppColors.inkFaint, fontSize: 12),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           ElevatedButton(
             onPressed: () =>
                 context.read<TransferBloc>().add(const TransferSubmitted()),
-            child: const Text('Confirm Transfer'),
+            child: const Text('Confirm transfer'),
           ),
         ],
       ),
@@ -467,16 +526,22 @@ class _ReviewStep extends StatelessWidget {
 class _ReviewRow extends StatelessWidget {
   final String label;
   final String value;
-  const _ReviewRow(this.label, this.value);
+  final bool isLast;
+  const _ReviewRow(this.label, this.value, {this.isLast = false});
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      decoration: isLast
+          ? null
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.outline)),
+            ),
       child: Row(
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(label, style: const TextStyle(color: AppColors.inkMuted)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink)),
         ],
       ),
     );
@@ -490,9 +555,10 @@ class _LoadingStep extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 24),
-            Text('Processing transfer...', style: TextStyle(fontSize: 16)),
+            CircularProgressIndicator(color: AppColors.violet),
+            SizedBox(height: AppSpacing.xxl),
+            Text('Processing transfer...',
+                style: TextStyle(fontSize: 16, color: AppColors.inkMuted)),
           ],
         ),
       );

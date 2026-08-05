@@ -1,4 +1,4 @@
-// NexaBank — Dio HTTP Client with full interceptor stack
+// PayMaye — Dio HTTP Client with full interceptor stack
 import 'dart:io';
 import 'package:dio/dio.dart';
 

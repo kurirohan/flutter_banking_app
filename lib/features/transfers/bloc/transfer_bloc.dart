@@ -1,4 +1,4 @@
-// NexaBank — Transfer BLoC (full state machine)
+// PayMaye — Transfer BLoC (full state machine)
 //
 // Flow: choose source account -> choose beneficiary -> enter amount
 //       -> review -> submit -> success/failed

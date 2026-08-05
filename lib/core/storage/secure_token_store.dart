@@ -1,4 +1,4 @@
-// NexaBank — Secure Token Storage
+// PayMaye — Secure Token Storage
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../auth/auth_service.dart';
 

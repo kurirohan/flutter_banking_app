@@ -1,4 +1,4 @@
-// NexaBank — Complete Banking Mobile App
+// PayMaye — Complete Banking Mobile App
 // BCT Mobile Applications Track — Day 9 Final Build
 
 import 'package:flutter/material.dart';
@@ -44,19 +44,19 @@ void main() async {
   final accountRepository = RemoteAccountRepository(apiClient);
   final transferRepository = RemoteTransferRepository(apiClient);
 
-  runApp(NexaBankApp(
+  runApp(PayMayeApp(
     authService: authService,
     accountRepository: accountRepository,
     transferRepository: transferRepository,
   ));
 }
 
-class NexaBankApp extends StatelessWidget {
+class PayMayeApp extends StatelessWidget {
   final AuthService authService;
   final AccountRepository accountRepository;
   final TransferRepository transferRepository;
 
-  const NexaBankApp({
+  const PayMayeApp({
     super.key,
     required this.authService,
     required this.accountRepository,
@@ -88,10 +88,10 @@ class NexaBankApp extends StatelessWidget {
           );
 
           return MaterialApp.router(
-            title: 'NexaBank',
+            title: 'PayMaye',
             debugShowCheckedModeBanner: false,
-            theme: NexaBankTheme.light(),
-            darkTheme: NexaBankTheme.dark(),
+            theme: PayMayeTheme.light(),
+            darkTheme: PayMayeTheme.dark(),
             themeMode: ThemeMode.system,
             routerConfig: router,
           );

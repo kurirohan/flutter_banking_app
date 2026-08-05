@@ -1,4 +1,4 @@
-// NexaBank — Account BLoC (full state machine)
+// PayMaye — Account BLoC (full state machine)
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/account_repository.dart';

@@ -1,26 +1,26 @@
-// NexaBank — Centralized Border Radius Scale
+// PayMaye — Centralized Border Radius Scale
 //
-// Each constant is named after the component role it's used for, and holds
-// the exact value already in use across the app — so this refactor doesn't
-// change how anything currently looks, it just gives every value one place
-// to be edited. Adjust here to restyle globally (e.g. all inputs, all
-// cards) instead of hunting through each screen.
+// Each constant is named after the component role it's used for, so the
+// whole app's roundness can be tuned from this one file. Values here lean
+// deliberately generous (bubbly/pill-shaped) — that softness is a core
+// part of the brand, not an incidental style choice.
 class AppRadius {
   AppRadius._();
 
   // ── Named scale (maps to the project's Small/Medium/Large parameter) ──
-  static const small = 8.0;
-  static const medium = 14.0;
-  static const large = 20.0;
+  static const small = 12.0;
+  static const medium = 20.0;
+  static const large = 28.0;
 
-  // ── Component-specific (kept explicit so visuals don't shift) ─────────
-  static const button = 14.0;
-  static const input = 12.0;
-  static const card = 16.0;
-  static const cardLarge = 20.0;
-  static const chip = 18.0;
-  static const avatarSquare = 10.0;
-  static const dialog = 20.0;
-  static const pillActive = 4.0;
-  static const pillInactive = 3.0;
+  // ── Component-specific ─────────────────────────────────────────────
+  static const button = 18.0; // full-width buttons (56px tall -> stadium-ish)
+  static const pill = 999.0; // fully rounded / stadium shape
+  static const input = 18.0;
+  static const card = 24.0;
+  static const cardLarge = 32.0;
+  static const chip = 999.0;
+  static const avatarSquare = 16.0;
+  static const dialog = 28.0;
+  static const pillActive = 8.0;
+  static const pillInactive = 4.0;
 }

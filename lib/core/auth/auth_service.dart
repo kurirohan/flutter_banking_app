@@ -1,4 +1,4 @@
-// NexaBank — Auth Service (OAuth 2.0 PKCE with Keycloak)
+// PayMaye — Auth Service (OAuth 2.0 PKCE with Keycloak)
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';

@@ -1,4 +1,4 @@
-// NexaBank — Smoke test
+// PayMaye — Smoke test
 //
 // Boots the real app with its real (mock-backed) dependencies and checks
 // it renders without throwing. AuthBloc's AuthCheckRequested handler
@@ -7,15 +7,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:nexa_bank/core/auth/auth_service.dart';
-import 'package:nexa_bank/core/network/dio_client.dart';
-import 'package:nexa_bank/core/storage/secure_token_store.dart';
-import 'package:nexa_bank/features/accounts/data/account_repository.dart';
-import 'package:nexa_bank/features/transfers/data/transfer_repository.dart';
-import 'package:nexa_bank/main.dart';
+import 'package:pay_maye/core/auth/auth_service.dart';
+import 'package:pay_maye/core/network/dio_client.dart';
+import 'package:pay_maye/core/storage/secure_token_store.dart';
+import 'package:pay_maye/features/accounts/data/account_repository.dart';
+import 'package:pay_maye/features/transfers/data/transfer_repository.dart';
+import 'package:pay_maye/main.dart';
 
 void main() {
-  testWidgets('NexaBankApp builds and settles without throwing', (tester) async {
+  testWidgets('PayMayeApp builds and settles without throwing', (tester) async {
     final tokenStore = SecureTokenStore();
     final authService = AuthService(tokenStore);
     final apiClient = ApiClient(
@@ -23,7 +23,7 @@ void main() {
       onUnauthorized: authService.logout,
     );
 
-    await tester.pumpWidget(NexaBankApp(
+    await tester.pumpWidget(PayMayeApp(
       authService: authService,
       accountRepository: RemoteAccountRepository(apiClient),
       transferRepository: RemoteTransferRepository(apiClient),

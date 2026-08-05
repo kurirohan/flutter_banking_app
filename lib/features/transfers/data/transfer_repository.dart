@@ -1,4 +1,4 @@
-// NexaBank — Transfer Repository
+// PayMaye — Transfer Repository
 import 'package:uuid/uuid.dart';
 import '../../../core/network/dio_client.dart';
 

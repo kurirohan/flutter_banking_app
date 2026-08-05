@@ -1,4 +1,4 @@
-// NexaBank — Account Repository
+// PayMaye — Account Repository
 import '../../../core/network/dio_client.dart';
 
 class Account {

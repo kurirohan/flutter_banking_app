@@ -1,4 +1,4 @@
-// NexaBank — Insights BLoC
+// PayMaye — Insights BLoC
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../accounts/data/account_repository.dart';

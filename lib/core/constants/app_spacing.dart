@@ -1,4 +1,4 @@
-// NexaBank — Centralized Spacing Scale
+// PayMaye — Centralized Spacing Scale
 //
 // Named padding/gap values instead of repeated magic numbers
 // (EdgeInsets.all(24), SizedBox(height: 16), etc.) scattered per screen.

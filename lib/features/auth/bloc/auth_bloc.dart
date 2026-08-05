@@ -1,4 +1,4 @@
-// NexaBank — Auth BLoC
+// PayMaye — Auth BLoC
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/auth/auth_service.dart';
