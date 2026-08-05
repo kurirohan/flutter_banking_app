@@ -154,6 +154,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isSubmitting = true);
 
+    
     await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
@@ -181,7 +182,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  
+  /// Shared label style so every field's caption renders identically.
   Widget _fieldLabel(BuildContext context, String text) {
     return Text(
       text,
@@ -332,59 +333,90 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: _fieldGap),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          _fieldLabel(context, 'First name'),
-                                          const SizedBox(height: _labelGap),
-                                          TextFormField(
-                                            controller: _firstNameController,
-                                            textCapitalization: TextCapitalization.words,
-                                            textInputAction: TextInputAction.next,
-                                            decoration: InputDecoration(
-                                              hintText: 'Juan',
-                                              prefixIcon: _fieldBadge(
-                                                Icons.person_outline,
-                                                AppColors.authBadgeBlue,
-                                              ),
-                                            ),
-                                            validator: _validateFirstName,
-                                          ),
-                                        ],
+                              // First / Last name — responsive: stacks into
+                              // one full-width field per row on narrow
+                              // screens (phones), and sits side-by-side
+                              // only once there's enough width for both
+                              // fields (and their error text) to breathe.
+                              // CrossAxisAlignment.start on the Row variant
+                              // keeps the pair aligned even when only one
+                              // field shows a validation error.
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final firstNameField = TextFormField(
+                                    controller: _firstNameController,
+                                    textCapitalization: TextCapitalization.words,
+                                    textInputAction: TextInputAction.next,
+                                    decoration: InputDecoration(
+                                      hintText: 'Juan',
+                                      prefixIcon: _fieldBadge(
+                                        Icons.person_outline,
+                                        AppColors.authBadgeBlue,
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.md),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          _fieldLabel(context, 'Last name'),
-                                          const SizedBox(height: _labelGap),
-                                          TextFormField(
-                                            controller: _lastNameController,
-                                            textCapitalization: TextCapitalization.words,
-                                            textInputAction: TextInputAction.next,
-                                            decoration: InputDecoration(
-                                              hintText: 'Dela Cruz',
-                                              prefixIcon: _fieldBadge(
-                                                Icons.person_outline,
-                                                AppColors.authBadgeBlue,
-                                              ),
-                                            ),
-                                            validator: _validateLastName,
-                                          ),
-                                        ],
+                                    validator: _validateFirstName,
+                                  );
+                                  final lastNameField = TextFormField(
+                                    controller: _lastNameController,
+                                    textCapitalization: TextCapitalization.words,
+                                    textInputAction: TextInputAction.next,
+                                    decoration: InputDecoration(
+                                      hintText: 'Dela Cruz',
+                                      prefixIcon: _fieldBadge(
+                                        Icons.person_outline,
+                                        AppColors.authBadgeBlue,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                    validator: _validateLastName,
+                                  );
+
+                                  const stackBreakpoint = 380.0;
+                                  final stacked = constraints.maxWidth < stackBreakpoint;
+
+                                  if (stacked) {
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _fieldLabel(context, 'First name'),
+                                        const SizedBox(height: _labelGap),
+                                        firstNameField,
+                                        const SizedBox(height: _fieldGap),
+                                        _fieldLabel(context, 'Last name'),
+                                        const SizedBox(height: _labelGap),
+                                        lastNameField,
+                                      ],
+                                    );
+                                  }
+
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            _fieldLabel(context, 'First name'),
+                                            const SizedBox(height: _labelGap),
+                                            firstNameField,
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.md),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            _fieldLabel(context, 'Last name'),
+                                            const SizedBox(height: _labelGap),
+                                            lastNameField,
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
+                              const SizedBox(height: _fieldGap),
 
                               _buildField(
                                 context: context,
@@ -545,6 +577,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                               const SizedBox(height: AppSpacing.xxl),
 
+                              // Create account button — gradient, matches login
                               SizedBox(
                                 width: double.infinity,
                                 height: 56,
@@ -629,9 +662,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
-                  // Small yellow accent blob straddling the header/form
-                  // seam — echoes the yellow blob behind the avatar on
-                  // the reference kit's "Good morning" account screen.
+
                   Positioned(
                     top: -18,
                     right: 28,

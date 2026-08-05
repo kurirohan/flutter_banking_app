@@ -100,21 +100,12 @@ class PayMayeTheme {
     );
   }
 
-  /// Input styling for the auth flow (login/signup), which uses the
-  /// pink→violet gradient palette from AppColors.auth* instead of the
-  /// app-wide mauve AppColors.primary. Apply this locally with a
-  /// `Theme(data: Theme.of(context).copyWith(inputDecorationTheme: ...))`
-  /// wrapper around the signup form — it intentionally does NOT replace
-  /// the global light() theme, so every other screen's text fields
-  /// (transfer amount, search, etc.) keep the standard mauve focus color.
   static InputDecorationTheme get authInputDecorationTheme {
     return InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
-      hintStyle: const TextStyle(
-        color: Colors.grey,),
-        floatingLabelStyle: const TextStyle(
-          color: AppColors.authGradientEnd),
+      hintStyle: TextStyle(fontSize: 14, color: Colors.grey[500]),
+      floatingLabelStyle: const TextStyle(color: AppColors.authGradientEnd),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.input),
         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -127,12 +118,12 @@ class PayMayeTheme {
         borderRadius: BorderRadius.circular(AppRadius.input),
         borderSide: const BorderSide(color: AppColors.authGradientEnd, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 
   static TextTheme _textTheme(Brightness brightness) {
-    final baseColor = brightness == Brightness.light ? Colors.black : Colors.white;
+    final baseColor = brightness == Brightness.light ? AppColors.primary : Colors.white;
 
     return TextTheme(
       displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: baseColor, letterSpacing: -1),
