@@ -90,8 +90,8 @@ class NexaBankApp extends StatelessWidget {
           return MaterialApp.router(
             title: 'NexaBank',
             debugShowCheckedModeBanner: false,
-            theme: NexaBankTheme.light(),
-            darkTheme: NexaBankTheme.dark(),
+            theme: PayMayeTheme.light(),
+            darkTheme: PayMayeTheme.dark(),
             themeMode: ThemeMode.system,
             routerConfig: router,
           );

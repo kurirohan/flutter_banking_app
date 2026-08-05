@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
+import '../features/auth/ui/signup_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
 import '../features/transfers/ui/transfer_screen.dart';
@@ -19,14 +20,16 @@ class AppRouter {
       redirect: (context, state) {
         final authState = authBloc.state;
         final isLogin = state.matchedLocation == '/login';
+        final isSignup = state.matchedLocation == '/signup';
 
-        if (authState is AuthUnauthenticated && !isLogin) return '/login';
-        if (authState is AuthAuthenticated && isLogin) return '/home';
+        if (authState is AuthUnauthenticated && !isLogin && !isSignup) return '/login';
+        if (authState is AuthAuthenticated && (isLogin || isSignup)) return '/home';
         return null;
       },
 
       routes: [
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+        GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
         ShellRoute(
           builder: (_, state, child) => _MainShell(child: child, location: state.matchedLocation),
           routes: [
