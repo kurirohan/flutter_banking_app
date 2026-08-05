@@ -115,6 +115,10 @@ class PayMayeTheme {
     return InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
+      hintStyle: const TextStyle(
+        color: Colors.grey,
+      ),
+      floatingLabelStyle: const TextStyle(color: AppColors.authGradientEnd),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.input),
         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -134,7 +138,7 @@ class PayMayeTheme {
 
   static TextTheme _textTheme(Brightness brightness) {
     final baseColor =
-        brightness == Brightness.light ? AppColors.primary : Colors.white;
+        brightness == Brightness.light ? Colors.black : Colors.white;
 
     return TextTheme(
       displayLarge: TextStyle(
