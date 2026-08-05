@@ -12,11 +12,10 @@ import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// Palette pulled directly from the NexaBank mockups (cream background,
-/// sunburst-yellow accent, purple → pink card gradient). If `AppColors`
-/// already defines equivalents, prefer wiring these into app_colors.dart
-/// instead of keeping a second source of truth — they're kept local here
-/// so this screen matches the design without touching files outside it.
+/// Home screen colors come from `AppColors.home*` — the "Soft Premium
+/// Banking / Modern Plum Fintech" palette (deep plum / purple / lavender
+/// branding on a warm off-white background), defined in app_colors.dart
+/// alongside the rest of the app's screen-scoped palettes (see `auth*`).
 
 // Shared category → icon/color mapping, used by both the transaction list
 // and the spending insights preview so the two stay visually consistent.
@@ -66,13 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: AppColors.homeBackground,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxContentWidth),
             child: RefreshIndicator(
-              color: AppColors.primary,
+              color: AppColors.homePrimaryPurple,
               onRefresh: () async {
                 context
                     .read<AccountBloc>()
@@ -118,7 +117,7 @@ class _HomeContent extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.homePrimaryPurple,
                     ),
                   ),
                 ),
@@ -153,7 +152,7 @@ class _Header extends StatelessWidget {
               width: 70,
               height: 70,
               decoration: const BoxDecoration(
-                color: AppColors.secondary,
+                color: AppColors.homeAccentYellow,
                 shape: BoxShape.circle,
               ),
             ),
@@ -165,11 +164,11 @@ class _Header extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 22,
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.homeSurface,
                     child: Text(
                       'AJ',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: AppColors.homePrimaryDeepPlum,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -182,9 +181,10 @@ class _Header extends StatelessWidget {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8607C),
+                        color: AppColors.homeError,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border:
+                            Border.all(color: AppColors.homeSurface, width: 2),
                       ),
                     ),
                   ),
@@ -199,7 +199,7 @@ class _Header extends StatelessWidget {
                       'Good ${_greeting()}',
                       style: const TextStyle(
                         fontSize: 13,
-                        color: AppColors.secondary,
+                        color: AppColors.homeTextSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -208,7 +208,7 @@ class _Header extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: AppColors.homeTextPrimary,
                       ),
                     ),
                   ],
@@ -217,9 +217,9 @@ class _Header extends StatelessWidget {
               IconButton(
                 onPressed: () => context.go('/notifications'),
                 icon: const Icon(Icons.notifications_none_rounded),
-                color: AppColors.primary,
+                color: AppColors.homePrimaryPurple,
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.homeSurface,
                   shape: const CircleBorder(),
                 ),
               ),
@@ -309,7 +309,9 @@ class _AccountCardsSectionState extends State<_AccountCardsSection> {
               width: isActive ? 20 : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: isActive ? AppColors.primary : Colors.grey[300],
+                color: isActive
+                    ? AppColors.homePrimaryPurple
+                    : AppColors.homeBorder,
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -412,16 +414,8 @@ class _AccountCardState extends State<_AccountCard>
 
   BoxDecoration _cardDecoration({bool reversed = false}) {
     final colors = reversed
-        ? [
-            AppColors.accountCardPalette[2],
-            AppColors.accountCardPalette[1],
-            AppColors.accountCardPalette[0],
-          ]
-        : [
-            AppColors.accountCardPalette[0],
-            AppColors.accountCardPalette[1],
-            AppColors.accountCardPalette[2],
-          ];
+        ? AppColors.homePrimaryGradient.reversed.toList()
+        : AppColors.homePrimaryGradient;
     return BoxDecoration(
       borderRadius: BorderRadius.circular(28),
       gradient: LinearGradient(
@@ -435,7 +429,7 @@ class _AccountCardState extends State<_AccountCard>
       ),
       boxShadow: [
         BoxShadow(
-          color: AppColors.primary.withOpacity(.18),
+          color: AppColors.homePrimaryDeepPlum.withOpacity(.18),
           blurRadius: 30,
           spreadRadius: 2,
           offset: const Offset(0, 14),
@@ -750,7 +744,7 @@ class _QuickActionsSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: AppColors.homeTextPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -802,10 +796,10 @@ class _QuickAction extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.homePrimaryPurple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 26),
+            child: Icon(icon, color: AppColors.homePrimaryPurple, size: 26),
           ),
           const SizedBox(height: 8),
           Text(
@@ -813,7 +807,7 @@ class _QuickAction extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.primary,
+              color: AppColors.homeTextPrimary,
             ),
           ),
         ],
@@ -868,11 +862,12 @@ class _InsightsPreview extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary),
+                    color: AppColors.homeTextPrimary),
               ),
               TextButton(
                 onPressed: () => context.go('/insights'),
-                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppColors.homePrimaryPurple),
                 child: const Text('See All'),
               ),
             ],
@@ -881,11 +876,12 @@ class _InsightsPreview extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.homeSurface,
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.homeBorder),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(.04),
+                  color: AppColors.homePrimaryDeepPlum.withOpacity(.05),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -899,7 +895,7 @@ class _InsightsPreview extends StatelessWidget {
                         'Spent this week',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.secondary,
+                          color: AppColors.homeTextSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -910,7 +906,7 @@ class _InsightsPreview extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary),
+                            color: AppColors.homeTextPrimary),
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
@@ -943,18 +939,16 @@ class _InsightsPreview extends StatelessWidget {
                                           end: Alignment.bottomCenter,
                                           colors: isToday
                                               ? [
+                                                  AppColors.homePrimaryDeepPlum,
                                                   AppColors
-                                                      .accountCardPalette[0],
-                                                  AppColors
-                                                      .accountCardPalette[2],
+                                                      .homeSecondaryLavender,
                                                 ]
                                               : [
+                                                  AppColors.homePrimaryDeepPlum
+                                                      .withOpacity(.2),
                                                   AppColors
-                                                      .accountCardPalette[0]
-                                                      .withOpacity(.25),
-                                                  AppColors
-                                                      .accountCardPalette[2]
-                                                      .withOpacity(.25),
+                                                      .homeSecondaryLavender
+                                                      .withOpacity(.2),
                                                 ],
                                         ),
                                       ),
@@ -968,8 +962,8 @@ class _InsightsPreview extends StatelessWidget {
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isToday
-                                            ? AppColors.primary
-                                            : AppColors.secondary,
+                                            ? AppColors.homePrimaryPurple
+                                            : AppColors.homeTextSecondary,
                                       ),
                                     ),
                                   ],
@@ -987,11 +981,11 @@ class _InsightsPreview extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(.1),
+                          color: AppColors.homePrimaryPurple.withOpacity(.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(Icons.insights_rounded,
-                            color: AppColors.primary),
+                            color: AppColors.homePrimaryPurple),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
@@ -999,7 +993,7 @@ class _InsightsPreview extends StatelessWidget {
                           'Your weekly spending will show up here once you '
                           'start transacting.',
                           style: TextStyle(
-                              fontSize: 13, color: AppColors.secondary),
+                              fontSize: 13, color: AppColors.homeTextSecondary),
                         ),
                       ),
                     ],
@@ -1025,12 +1019,13 @@ class _TransactionHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: AppColors.homeTextPrimary,
               ),
             ),
             TextButton(
               onPressed: () => context.go('/accounts'),
-              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.homePrimaryPurple),
               child: const Text('See All'),
             ),
           ],
@@ -1051,7 +1046,7 @@ class _TransactionList extends StatelessWidget {
             padding: EdgeInsets.all(32),
             child: Text(
               'No transactions yet',
-              style: TextStyle(color: AppColors.secondary),
+              style: TextStyle(color: AppColors.homeTextSecondary),
             ),
           ),
         ),
@@ -1075,7 +1070,8 @@ class _TransactionTile extends StatelessWidget {
     final isCredit = txn.isCredit;
     final icon = _kCategoryIcons[txn.category] ?? Icons.receipt_rounded;
     final chipColor = _kCategoryColors[txn.category] ?? const Color(0xFFD9D6E3);
-    final amountColor = isCredit ? AppColors.success : AppColors.primary;
+    final amountColor =
+        isCredit ? AppColors.homeSuccess : AppColors.homeTextPrimary;
     final title = txn.merchantName ?? txn.description;
     final formattedAmount = CurrencyFormatter.formatSigned(
       txn.amount,
@@ -1087,11 +1083,12 @@ class _TransactionTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.homeSurface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.homeBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
+            color: AppColors.homePrimaryDeepPlum.withOpacity(.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1106,7 +1103,7 @@ class _TransactionTile extends StatelessWidget {
               color: chipColor.withOpacity(0.35),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
+            child: Icon(icon, color: AppColors.homePrimaryPurple, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1120,7 +1117,7 @@ class _TransactionTile extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: AppColors.primary,
+                    color: AppColors.homeTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1128,7 +1125,7 @@ class _TransactionTile extends StatelessWidget {
                   DateFormat('EEE dd.MM.yyyy').format(txn.bookingDate),
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.secondary,
+                    color: AppColors.homeTextSecondary,
                   ),
                 ),
               ],
@@ -1217,22 +1214,22 @@ class _HomeError extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8607C).withOpacity(0.1),
+                  color: AppColors.homeError.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.error_outline_rounded,
-                    size: 36, color: Color(0xFFE8607C)),
+                    size: 36, color: AppColors.homeError),
               ),
               const SizedBox(height: 16),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.primary),
+                style: const TextStyle(color: AppColors.homeTextPrimary),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.homePrimaryPurple,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),

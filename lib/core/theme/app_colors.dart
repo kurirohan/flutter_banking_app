@@ -69,4 +69,40 @@ class AppColors {
     Color(0xFF00BCD4),
     Color(0xFF607D8B),
   ];
+
+  // ── Home screen (Soft Premium Banking / Modern Plum Fintech) ───
+  // Scoped to the Home dashboard the same way auth* is scoped to the
+  // auth flow — this screen has its own premium palette instead of the
+  // app-wide mauve `primary`/`secondary`.
+  static const homePrimaryDeepPlum = Color(0xFF4B314F);
+  static const homePrimaryPurple = Color(0xFF6F4A78);
+  static const homeSecondaryLavender = Color(0xFFB48BC7);
+
+  static const homeBackground = Color(0xFFF8F6F4);
+  static const homeSurface = Color(0xFFFCFAFB);
+  static const homeBorder = Color(0xFFE9E3EA);
+
+  static const homeAccentPink = Color(0xFFE8B7D0);
+  static const homeAccentBlue = Color(0xFFBFE3F7);
+  static const homeAccentYellow = Color(0xFFF3E19A);
+
+  static const homeTextPrimary = Color(0xFF2F2432);
+  static const homeTextSecondary = Color(0xFF8B7C8F);
+
+  static const homeSuccess = Color(0xFF57B26A);
+  static const homeError = Color(0xFFD96B6B);
+  static const homeFocus = Color(0xFF5B8DEF);
+
+  /// NexaBank Primary Gradient — used for the hero/account card carousel.
+  static const homePrimaryGradient = [
+    homePrimaryDeepPlum,
+    homePrimaryPurple,
+    homeSecondaryLavender,
+  ];
+
+  /// Hero Card Gradient — two-stop variant for smaller accents.
+  static const homeHeroCardGradient = [
+    homePrimaryDeepPlum,
+    homePrimaryPurple,
+  ];
 }
