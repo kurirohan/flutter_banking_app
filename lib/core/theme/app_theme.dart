@@ -155,6 +155,28 @@ class PayMayeTheme {
     );
   }
 
+  static InputDecorationTheme get authInputDecorationTheme {
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      hintStyle: TextStyle(fontSize: 14, color: Colors.grey[500]),
+      floatingLabelStyle: const TextStyle(color: AppColors.authGradientEnd),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: const BorderSide(color: AppColors.authGradientEnd, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    );
+  }
+
   static TextTheme _textTheme(Brightness brightness) {
     final baseColor =
         brightness == Brightness.light ? AppColors.ink : Colors.white;
