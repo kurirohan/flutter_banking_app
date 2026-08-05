@@ -31,7 +31,7 @@ class Account {
           ? AccountType.savings
           : AccountType.current,
       currency: (json['currency'] as String),
-      balance: (json['balance'] as num).toDouble(),
+      balance: double.parse(json['balance'] as String),
       isLocked: bool.tryParse(json['isLocked']) ?? false,
       dateCreated: DateTime.parse(json['dateCreated'] as String));
 

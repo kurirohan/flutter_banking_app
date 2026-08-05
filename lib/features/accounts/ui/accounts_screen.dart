@@ -195,7 +195,7 @@ class _AccountTabs extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       CurrencyFormatter.format(
-                        state.selectedAccount!.availableBalance,
+                        state.selectedAccount!.balance,
                         currency: state.selectedAccount!.currency,
                       ),
                       style: const TextStyle(
@@ -274,7 +274,7 @@ class _TxnRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCredit = txn.isCredit;
+    final isCredit = txn.type == txn_model.TransactionType.credit;
     final icon = _kCategoryIcons[txn.category] ?? Icons.receipt_rounded;
     final tintColor =
         isCredit ? AppColors.homeSuccess : AppColors.homePrimaryPurple;
@@ -307,7 +307,7 @@ class _TxnRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  txn.merchantName ?? txn.description,
+                  txn.sourceAcctId ?? txn.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

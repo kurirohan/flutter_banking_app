@@ -282,7 +282,7 @@ class _AccountCardsSectionState extends State<_AccountCardsSection> {
             controller: _controller,
             itemCount: accounts.length,
             onPageChanged: (i) {
-              final accounts = state.accounts.whereType<Account>().toList();
+              final accounts = widget.state.accounts.whereType<Account>().toList();
               context.read<AccountBloc>().add(
                     AccountSelected(accounts[i].id),
                   );
@@ -626,7 +626,7 @@ class _AccountCardState extends State<_AccountCard>
           _backRow(
             'Available Balance',
             CurrencyFormatter.format(
-              widget.account.availableBalance,
+              widget.account.balance,
               currency: widget.account.currency,
             ),
           ),
@@ -824,7 +824,7 @@ class _QuickAction extends StatelessWidget {
 /// in the transaction list. Falls back to a friendly empty state when
 /// there isn't enough data yet, rather than showing an all-zero chart.
 class _InsightsPreview extends StatelessWidget {
-  final List<Transaction> transactions;
+  final List<txn_model.Transaction> transactions;
   const _InsightsPreview({required this.transactions});
 
   @override
@@ -838,9 +838,9 @@ class _InsightsPreview extends StatelessWidget {
     String? currency;
 
     for (final txn in transactions) {
-      if (txn.isCredit) continue;
+      if (txn.type == txn_model.TransactionType.credit) continue;
       final d = DateTime(
-          txn.bookingDate.year, txn.bookingDate.month, txn.bookingDate.day);
+          txn.dateCreated.year, txn.dateCreated.month, txn.dateCreated.day);
       if (totals.containsKey(d)) {
         totals[d] = totals[d]! + txn.amount;
         currency ??= txn.currency;
@@ -1070,12 +1070,12 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCredit = txn.isCredit;
+    final isCredit = txn.type == txn_model.TransactionType.credit;
     final icon = _kCategoryIcons[txn.category] ?? Icons.receipt_rounded;
     final chipColor = _kCategoryColors[txn.category] ?? const Color(0xFFD9D6E3);
     final amountColor =
         isCredit ? AppColors.homeSuccess : AppColors.homeTextPrimary;
-    final title = txn.merchantName ?? txn.description;
+    final title = txn.sourceAcctId ?? txn.description;
     final formattedAmount = CurrencyFormatter.formatSigned(
       txn.amount,
       isCredit: isCredit,
@@ -1125,7 +1125,7 @@ class _TransactionTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  DateFormat('EEE dd.MM.yyyy').format(txn.bookingDate),
+                  DateFormat('EEE dd.MM.yyyy').format(txn.dateCreated),
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.homeTextSecondary,

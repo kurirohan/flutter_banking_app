@@ -124,18 +124,18 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   Future<void> _onFetch(
       AccountFetchRequested _, Emitter<AccountState> emit) async {
     emit(const AccountLoading());
-    try {
+    // try {
       final accounts = await _accountRepo.fetchAccounts();
       emit(AccountLoaded(
         accounts: accounts,
         selectedAccountId: accounts.isNotEmpty ? accounts.first.id : null,
       ));
-    } catch (e) {
-      emit(const AccountError(
-        message: 'Failed to load accounts. Please try again.',
-        isNetworkError: true,
-      ));
-    }
+    // } catch (e) {
+    //   emit(const AccountError(
+    //     message: 'Failed to load accounts. Please try again.',
+    //     isNetworkError: true,
+    //   ));
+    // }
   }
 
   Future<void> _onRefresh(
