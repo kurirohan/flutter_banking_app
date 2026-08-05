@@ -1,17 +1,3 @@
-// PayMaye — Sign Up Screen
-//
-// Standalone screen for new-account creation. Not yet wired into
-// AuthBloc (the app currently uses an OAuth + PKCE-only login flow —
-// see login_screen.dart / auth_bloc.dart), so this screen collects and
-// validates the form locally. To go live, connect `_handleSubmit` to a
-// real registration call (e.g. a new AuthSignupRequested event on
-// AuthBloc).
-//
-// Palette matches login_screen.dart / the reference Figma UI kit:
-// deep navy header + pink-violet gradient + yellow accent, and the
-// colorful pastel field badges echo the contact avatars (ES/EA/OW/SB)
-// from the reference kit's Transfer screen. All defined centrally in
-// AppColors.auth*.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -29,7 +15,8 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -38,15 +25,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
   DateTime? _selectedBirthday;
 
-
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
   bool _isSubmitting = false;
 
+  static const double _labelGap = AppSpacing.sm;
+  static const double _fieldGap = AppSpacing.xl;
+
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _birthdayController.dispose();
@@ -55,9 +45,23 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Enter your full name';
-    if (value.trim().length < 2) return 'Name looks too short';
+  String? _validateFirstName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Enter your first name';
+    }
+    if (value.trim().length < 2) {
+      return 'First name is too short';
+    }
+    return null;
+  }
+
+  String? _validateLastName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Enter your last name';
+    }
+    if (value.trim().length < 2) {
+      return 'Last name is too short';
+    }
     return null;
   }
 
@@ -98,25 +102,26 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _pickBirthday() async {
-  final pickedDate = await showDatePicker(
-    context: context,
-    initialDate: DateTime.now().subtract(
-      const Duration(days: 365 * 18),
-    ),
-    firstDate: DateTime(1900),
-    lastDate: DateTime.now(),
-  );
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 365 * 18),
+      ),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
 
-  if (pickedDate != null) {
-    setState(() {
-      _selectedBirthday = pickedDate;
-      _birthdayController.text =
-          "${pickedDate.month.toString().padLeft(2, '0')}/"
-          "${pickedDate.day.toString().padLeft(2, '0')}/"
-          "${pickedDate.year}";
-    });
+    if (pickedDate != null) {
+      setState(() {
+        _selectedBirthday = pickedDate;
+        _birthdayController.text =
+            "${pickedDate.month.toString().padLeft(2, '0')}/"
+            "${pickedDate.day.toString().padLeft(2, '0')}/"
+            "${pickedDate.year}";
+      });
+      _formKey.currentState?.validate();
+    }
   }
-}
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Enter a password';
@@ -149,12 +154,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // TODO: replace with a real registration call, e.g.:
-    // context.read<AuthBloc>().add(AuthSignupRequested(
-    //   name: _nameController.text.trim(),
-    //   email: _emailController.text.trim(),
-    //   password: _passwordController.text,
-    // ));
     await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
@@ -169,9 +168,6 @@ class _SignupScreenState extends State<SignupScreen> {
     context.go('/login');
   }
 
-  /// Small colored circle badge for a field's leading icon — echoes the
-  /// pastel contact-avatar circles (ES, EA, OW, SB...) from the
-  /// reference kit's Transfer screen.
   Widget _fieldBadge(IconData icon, Color color) {
     return Container(
       margin: const EdgeInsets.all(10),
@@ -182,6 +178,35 @@ class _SignupScreenState extends State<SignupScreen> {
         shape: BoxShape.circle,
       ),
       child: Icon(icon, size: 16, color: color),
+    );
+  }
+
+  
+  Widget _fieldLabel(BuildContext context, String text) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: AppColors.authGradientEnd,
+          ),
+    );
+  }
+
+  Widget _buildField({
+    required BuildContext context,
+    required String label,
+    required Widget field,
+    bool trailingGap = true,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: trailingGap ? _fieldGap : 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _fieldLabel(context, label),
+          const SizedBox(height: _labelGap),
+          field,
+        ],
+      ),
     );
   }
 
@@ -210,8 +235,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.lg),
-                  // Logo with the yellow accent blob peeking out behind it,
-                  // same treatment as login_screen.dart.
                   SizedBox(
                     width: 60,
                     height: 60,
@@ -300,10 +323,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         data: Theme.of(context).copyWith(
                           inputDecorationTheme: PayMayeTheme.authInputDecorationTheme,
                           textTheme: Theme.of(context).textTheme.copyWith(
-                            bodyLarge: const TextStyle(
-                              color: Colors.black87,
+                                bodyLarge: const TextStyle(color: Colors.black87),
                               ),
-                            ),
                         ),
                         child: Form(
                           key: _formKey,
@@ -311,145 +332,161 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Full name',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: _fieldGap),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          _fieldLabel(context, 'First name'),
+                                          const SizedBox(height: _labelGap),
+                                          TextFormField(
+                                            controller: _firstNameController,
+                                            textCapitalization: TextCapitalization.words,
+                                            textInputAction: TextInputAction.next,
+                                            decoration: InputDecoration(
+                                              hintText: 'Juan',
+                                              prefixIcon: _fieldBadge(
+                                                Icons.person_outline,
+                                                AppColors.authBadgeBlue,
+                                              ),
+                                            ),
+                                            validator: _validateFirstName,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _nameController,
-                                textCapitalization: TextCapitalization.words,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  hintText: 'Juan Dela Cruz',
-                                  prefixIcon: _fieldBadge(
-                                      Icons.person_outline, AppColors.authBadgeBlue),
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          _fieldLabel(context, 'Last name'),
+                                          const SizedBox(height: _labelGap),
+                                          TextFormField(
+                                            controller: _lastNameController,
+                                            textCapitalization: TextCapitalization.words,
+                                            textInputAction: TextInputAction.next,
+                                            decoration: InputDecoration(
+                                              hintText: 'Dela Cruz',
+                                              prefixIcon: _fieldBadge(
+                                                Icons.person_outline,
+                                                AppColors.authBadgeBlue,
+                                              ),
+                                            ),
+                                            validator: _validateLastName,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                validator: _validateName,
                               ),
-                              const SizedBox(height: AppSpacing.xl),
 
-                              Text(
-                                'Email address',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
-                                    ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  hintText: 'you@example.com',
-                                  prefixIcon: _fieldBadge(
-                                      Icons.mail_outline, AppColors.authBadgePink),
+                              _buildField(
+                                context: context,
+                                label: 'Email address',
+                                field: TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: InputDecoration(
+                                    hintText: 'you@example.com',
+                                    prefixIcon: _fieldBadge(
+                                        Icons.mail_outline, AppColors.authBadgePink),
+                                  ),
+                                  validator: _validateEmail,
                                 ),
-                                validator: _validateEmail,
                               ),
-                              const SizedBox(height: AppSpacing.xl),
 
-                              Text(
-                                'Phone number',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
+                              _buildField(
+                                context: context,
+                                label: 'Phone number',
+                                field: TextFormField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  textInputAction: TextInputAction.next,
+                                  maxLength: 11,
+                                  decoration: InputDecoration(
+                                    hintText: '09XXXXXXXXX',
+                                    counterText: '',
+                                    prefixIcon: _fieldBadge(
+                                      Icons.phone_outlined,
+                                      AppColors.authBadgeTeal,
                                     ),
+                                  ),
+                                  validator: _validatePhone,
+                                ),
                               ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _phoneController,
-                                keyboardType: TextInputType.phone,
-                                textInputAction: TextInputAction.next,
-                                maxLength: 11,
-                                decoration: InputDecoration(
-                                  hintText: '09XXXXXXXXX',
-                                  counterText: '',
-                                  prefixIcon: _fieldBadge(
-                                    Icons.phone_outlined,
-                                    AppColors.authBadgeTeal,
+
+                              _buildField(
+                                context: context,
+                                label: 'Birthday',
+                                field: TextFormField(
+                                  controller: _birthdayController,
+                                  readOnly: true,
+                                  validator: _validateBirthday,
+                                  onTap: _pickBirthday,
+                                  decoration: InputDecoration(
+                                    hintText: 'Select your birth date',
+                                    prefixIcon: _fieldBadge(
+                                      Icons.cake_outlined,
+                                      AppColors.authBadgeLavender,
+                                    ),
+                                    suffixIcon: const Icon(Icons.calendar_month_outlined),
                                   ),
                                 ),
-                                validator: _validatePhone,
                               ),
-                              const SizedBox(height: AppSpacing.xl),
 
-                              Text(
-                                'Birthday',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
+                              _buildField(
+                                context: context,
+                                label: 'Password',
+                                field: TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: InputDecoration(
+                                    hintText: 'At least 8 characters',
+                                    prefixIcon: _fieldBadge(
+                                        Icons.lock_outline, AppColors.authBadgeTeal),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined),
+                                      onPressed: () => setState(
+                                          () => _obscurePassword = !_obscurePassword),
                                     ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _birthdayController,
-                                readOnly: true,
-                                validator: _validateBirthday,
-                                onTap: _pickBirthday,
-                                decoration: InputDecoration(
-                                  hintText: 'Select your birth date',
-                                  prefixIcon: _fieldBadge(
-                                    Icons.cake_outlined,
-                                    AppColors.authBadgeLavender,
                                   ),
-                                  suffixIcon: const Icon(Icons.calendar_month_outlined),
+                                  validator: _validatePassword,
                                 ),
                               ),
-                              const SizedBox(height: AppSpacing.xl),
 
-                              Text(
-                                'Password',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
+                              _buildField(
+                                context: context,
+                                label: 'Confirm password',
+                                trailingGap: false,
+                                field: TextFormField(
+                                  controller: _confirmPasswordController,
+                                  obscureText: _obscureConfirmPassword,
+                                  textInputAction: TextInputAction.done,
+                                  decoration: InputDecoration(
+                                    hintText: 'Re-enter your password',
+                                    prefixIcon: _fieldBadge(
+                                        Icons.lock_outline, AppColors.authBadgeLavender),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_obscureConfirmPassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined),
+                                      onPressed: () => setState(() =>
+                                          _obscureConfirmPassword = !_obscureConfirmPassword),
                                     ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  hintText: 'At least 8 characters',
-                                  prefixIcon: _fieldBadge(
-                                      Icons.lock_outline, AppColors.authBadgeTeal),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(_obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined),
-                                    onPressed: () => setState(
-                                        () => _obscurePassword = !_obscurePassword),
                                   ),
+                                  validator: _validateConfirmPassword,
+                                  onFieldSubmitted: (_) => _handleSubmit(),
                                 ),
-                                validator: _validatePassword,
-                              ),
-                              const SizedBox(height: AppSpacing.xl),
-
-                              Text(
-                                'Confirm password',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      color: AppColors.authGradientEnd,
-                                    ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              TextFormField(
-                                controller: _confirmPasswordController,
-                                obscureText: _obscureConfirmPassword,
-                                textInputAction: TextInputAction.done,
-                                decoration: InputDecoration(
-                                  hintText: 'Re-enter your password',
-                                  prefixIcon: _fieldBadge(
-                                      Icons.lock_outline, AppColors.authBadgeLavender),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(_obscureConfirmPassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined),
-                                    onPressed: () => setState(() =>
-                                        _obscureConfirmPassword = !_obscureConfirmPassword),
-                                  ),
-                                ),
-                                validator: _validateConfirmPassword,
-                                onFieldSubmitted: (_) => _handleSubmit(),
                               ),
                               const SizedBox(height: AppSpacing.xl),
 
@@ -508,7 +545,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                               const SizedBox(height: AppSpacing.xxl),
 
-                              // Create account button — gradient, matches login
                               SizedBox(
                                 width: double.infinity,
                                 height: 56,
@@ -560,17 +596,17 @@ class _SignupScreenState extends State<SignupScreen> {
                               const SizedBox(height: AppSpacing.xl),
 
                               // Sign in link
-                              Center
-                              (
+                              Center(
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
                                       'Already have an account? ',
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            color: Colors.grey.shade600,
-                                          ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(color: Colors.grey.shade600),
                                     ),
                                     GestureDetector(
                                       onTap: () => context.go('/login'),
