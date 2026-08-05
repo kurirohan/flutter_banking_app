@@ -1,6 +1,6 @@
 {
-    "name": "flutter_banking_app",
-    "short_name": "flutter_banking_app",
+    "name": "nexa_bank",
+    "short_name": "nexa_bank",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
