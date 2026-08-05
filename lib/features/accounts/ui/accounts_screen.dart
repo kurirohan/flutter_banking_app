@@ -55,7 +55,8 @@ class _AccountTabs extends StatelessWidget {
         children: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             child: Row(
               children: state.accounts.map((acc) {
                 final isSelected = acc.id == state.selectedAccountId;
@@ -64,7 +65,9 @@ class _AccountTabs extends StatelessWidget {
                   child: ChoiceChip(
                     label: Text(acc.name),
                     selected: isSelected,
-                    onSelected: (_) => context.read<AccountBloc>().add(AccountSelected(acc.id)),
+                    onSelected: (_) => context
+                        .read<AccountBloc>()
+                        .add(AccountSelected(acc.id)),
                     selectedColor: AppColors.chipSelected,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : null,
@@ -76,34 +79,69 @@ class _AccountTabs extends StatelessWidget {
             ),
           ),
           if (state.selectedAccount != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
+            Container(
+              margin: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                0,
+                AppSpacing.xl,
+                AppSpacing.lg,
+              ),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: AppColors.accountCardPalette,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
               child: Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Balance', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                      Text(
-                        CurrencyFormatter.format(
-                          state.selectedAccount!.balance,
-                          currency: state.selectedAccount!.currency,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Current Balance',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          CurrencyFormatter.format(
+                            state.selectedAccount!.balance,
+                            currency: state.selectedAccount!.currency,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const Spacer(),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Available', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      const Text(
+                        'Available',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
                       Text(
                         CurrencyFormatter.format(
                           state.selectedAccount!.availableBalance,
                           currency: state.selectedAccount!.currency,
                         ),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -111,6 +149,22 @@ class _AccountTabs extends StatelessWidget {
               ),
             ),
           ],
+          const Spacer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('Available',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Text(
+                CurrencyFormatter.format(
+                  state.selectedAccount!.availableBalance,
+                  currency: state.selectedAccount!.currency,
+                ),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -145,7 +199,8 @@ class _TransactionHistory extends StatelessWidget {
             // Sticky date header
             Container(
               color: Colors.grey[100],
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
               width: double.infinity,
               child: Text(date,
                   style: TextStyle(
@@ -170,9 +225,11 @@ class _TxnRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCredit = txn.isCredit;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
       leading: Container(
-        width: 44, height: 44,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: isCredit ? Colors.green.withOpacity(0.1) : Colors.grey[100],
           shape: BoxShape.circle,
@@ -188,7 +245,8 @@ class _TxnRow extends StatelessWidget {
       subtitle: Text(txn.category,
           style: TextStyle(color: Colors.grey[500], fontSize: 12)),
       trailing: Text(
-        CurrencyFormatter.formatSigned(txn.amount, isCredit: isCredit, currency: txn.currency),
+        CurrencyFormatter.formatSigned(txn.amount,
+            isCredit: isCredit, currency: txn.currency),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 15,
