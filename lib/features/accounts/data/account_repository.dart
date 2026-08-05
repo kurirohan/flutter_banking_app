@@ -29,11 +29,40 @@ class Account {
         currency: json['currency'] as String,
         type: json['type'] as String,
       );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'accountNumber': accountNumber,
+        'balance': balance,
+        'availableBalance': availableBalance,
+        'currency': currency,
+        'type': type,
+      };
+
+  Account copyWith({
+    String? id,
+    String? name,
+    String? accountNumber,
+    double? balance,
+    double? availableBalance,
+    String? currency,
+    String? type,
+  }) {
+    return Account(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      accountNumber: accountNumber ?? this.accountNumber,
+      balance: balance ?? this.balance,
+      availableBalance: availableBalance ?? this.availableBalance,
+      currency: currency ?? this.currency,
+      type: type ?? this.type,
+    );
+  }
 }
 
 class Transaction {
   final String id;
-  final String type;   // CREDIT | DEBIT
+  final String type; // CREDIT | DEBIT
   final double amount;
   final String currency;
   final DateTime bookingDate;
@@ -64,6 +93,38 @@ class Transaction {
         merchantName: json['merchantName'] as String?,
         category: json['category'] as String? ?? 'Other',
       );
+
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'amount': amount,
+        'currency': currency,
+        'bookingDate': bookingDate.toIso8601String(),
+        'description': description,
+        'merchantName': merchantName,
+        'category': category,
+      };
+
+  Transaction copyWith({
+    String? id,
+    String? type,
+    double? amount,
+    String? currency,
+    DateTime? bookingDate,
+    String? description,
+    String? merchantName,
+    String? category,
+  }) {
+    return Transaction(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
+      bookingDate: bookingDate ?? this.bookingDate,
+      description: description ?? this.description,
+      merchantName: merchantName ?? this.merchantName,
+      category: category ?? this.category,
+    );
+  }
 }
 
 abstract class AccountRepository {

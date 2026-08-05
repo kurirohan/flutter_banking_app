@@ -63,7 +63,8 @@ class _HomeContent extends StatelessWidget {
         SliverToBoxAdapter(child: _QuickActionsSection()),
         SliverToBoxAdapter(child: _TransactionHeader()),
         state.transactionsLoading
-            ? const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()))
+            ? const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()))
             : _TransactionList(transactions: state.transactions),
         const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
       ],
@@ -78,7 +79,8 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.xl, AppSpacing.xxl, 0),
+      padding:
+          EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.xl, AppSpacing.xxl, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -97,7 +99,8 @@ class _Header extends StatelessWidget {
                 radius: 22,
                 backgroundColor: AppColors.primary,
                 child: const Text('AJ',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
               if (state.isRefreshing)
                 const Positioned.fill(
@@ -135,8 +138,8 @@ class _AccountCardsSection extends StatelessWidget {
             itemCount: state.accounts.length,
             onPageChanged: (i) {
               context.read<AccountBloc>().add(
-                AccountSelected(state.accounts[i].id),
-              );
+                    AccountSelected(state.accounts[i].id),
+                  );
             },
             itemBuilder: (context, i) {
               final acc = state.accounts[i];
@@ -157,12 +160,16 @@ class _AccountCardsSection extends StatelessWidget {
           children: state.accounts.asMap().entries.map((e) {
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: e.key == state.accounts.indexWhere(
-                  (a) => a.id == state.selectedAccountId) ? 20 : 6,
+              width: e.key ==
+                      state.accounts
+                          .indexWhere((a) => a.id == state.selectedAccountId)
+                  ? 20
+                  : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: e.key == state.accounts.indexWhere(
-                    (a) => a.id == state.selectedAccountId)
+                color: e.key ==
+                        state.accounts
+                            .indexWhere((a) => a.id == state.selectedAccountId)
                     ? AppColors.primary
                     : Colors.grey[300],
                 borderRadius: BorderRadius.circular(3),
@@ -215,7 +222,8 @@ class _AccountCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            CurrencyFormatter.format(account.balance, currency: account.currency),
+            CurrencyFormatter.format(account.balance,
+                currency: account.currency),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 30,
@@ -230,8 +238,8 @@ class _AccountCard extends StatelessWidget {
           ),
           const Spacer(),
           Text(account.accountNumber,
-              style: const TextStyle(color: Colors.white54, fontSize: 13,
-                  letterSpacing: 1)),
+              style: const TextStyle(
+                  color: Colors.white54, fontSize: 13, letterSpacing: 1)),
         ],
       ),
     );
@@ -243,19 +251,33 @@ class _QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.xxxl, AppSpacing.xxl, 0),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.xxl, AppSpacing.xxxl, AppSpacing.xxl, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
             children: [
-              _QuickAction(icon: Icons.send, label: 'Transfer', onTap: () => context.go('/transfer')),
-              _QuickAction(icon: Icons.receipt_long, label: 'Pay Bills', onTap: () {}),
-              _QuickAction(icon: Icons.qr_code_scanner, label: 'QR Pay', onTap: () {}),
-              _QuickAction(icon: Icons.bar_chart, label: 'Insights', onTap: () => context.go('/insights')),
+              _QuickAction(
+                  icon: Icons.send,
+                  label: 'Transfer',
+                  onTap: () => context.go('/transfer')),
+              _QuickAction(
+                  icon: Icons.receipt_long, label: 'Pay Bills', onTap: () {}),
+              _QuickAction(
+                  icon: Icons.qr_code_scanner, label: 'QR Pay', onTap: () {}),
+              _QuickAction(
+                  icon: Icons.bar_chart,
+                  label: 'Insights',
+                  onTap: () => context.go('/insights')),
+              _QuickAction(
+                  icon: Icons.storage,
+                  label: 'Firestore Test',
+                  onTap: () => context.go('/firestore-test')),
             ],
           ),
         ],
@@ -268,7 +290,8 @@ class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _QuickAction({required this.icon, required this.label, required this.onTap});
+  const _QuickAction(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +309,9 @@ class _QuickAction extends StatelessWidget {
             child: Icon(icon, color: AppColors.primary, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -297,15 +322,19 @@ class _TransactionHeader extends StatelessWidget {
   const _TransactionHeader();
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.xxxl, AppSpacing.xxl, AppSpacing.lg),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Recent Transactions', style: Theme.of(context).textTheme.titleLarge),
-        TextButton(onPressed: () => context.go('/accounts'), child: const Text('See All')),
-      ],
-    ),
-  );
+        padding: EdgeInsets.fromLTRB(
+            AppSpacing.xxl, AppSpacing.xxxl, AppSpacing.xxl, AppSpacing.lg),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Recent Transactions',
+                style: Theme.of(context).textTheme.titleLarge),
+            TextButton(
+                onPressed: () => context.go('/accounts'),
+                child: const Text('See All')),
+          ],
+        ),
+      );
 }
 
 class _TransactionList extends StatelessWidget {
@@ -354,7 +383,8 @@ class _TransactionTile extends StatelessWidget {
     final amountColor = isCredit ? Colors.green[700]! : Colors.black87;
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xs),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxl, vertical: AppSpacing.xs),
       leading: Container(
         width: 48,
         height: 48,
@@ -375,7 +405,8 @@ class _TransactionTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            CurrencyFormatter.formatSigned(txn.amount, isCredit: isCredit, currency: txn.currency),
+            CurrencyFormatter.formatSigned(txn.amount,
+                isCredit: isCredit, currency: txn.currency),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 15,
@@ -408,8 +439,11 @@ class _HomeShimmer extends StatelessWidget {
             const SizedBox(height: 8),
             _box(200, 28),
             const SizedBox(height: 32),
-            Container(height: 190, decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(20))),
+            Container(
+                height: 190,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20))),
             const SizedBox(height: 32),
             for (int i = 0; i < 5; i++) ...[
               Row(children: [
@@ -432,12 +466,13 @@ class _HomeShimmer extends StatelessWidget {
   }
 
   Widget _box(double w, double h, {double radius = 8}) => Container(
-    width: w, height: h,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(radius),
-    ),
-  );
+        width: w,
+        height: h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      );
 }
 
 class _HomeError extends StatelessWidget {
@@ -445,19 +480,20 @@ class _HomeError extends StatelessWidget {
   const _HomeError({required this.message});
   @override
   Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.error_outline, size: 64, color: Colors.red),
-        const SizedBox(height: 16),
-        Text(message, textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: () =>
-              context.read<AccountBloc>().add(const AccountFetchRequested()),
-          child: const Text('Try Again'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context
+                  .read<AccountBloc>()
+                  .add(const AccountFetchRequested()),
+              child: const Text('Try Again'),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 }
