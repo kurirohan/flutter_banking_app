@@ -1,6 +1,7 @@
-// NexaBank — Login Screen with PKCE OAuth flow
+// PayMaye — Login Screen with PKCE OAuth flow
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -20,32 +21,66 @@ class LoginScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.authBackground,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               children: [
                 const Spacer(),
-                // Logo
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppRadius.large),
-                  ),
-                  child: const Center(
-                    child: Text('N',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                        )),
+                // Logo, with a soft yellow accent blob behind it
+                // (matches the "Good morning" avatar treatment in the
+                // reference UI kit).
+                SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          decoration: const BoxDecoration(
+                            color: AppColors.authAccentYellow,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: AppColors.authGradient,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.large),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.authGradientEnd.withOpacity(0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text('P',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                              )),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text('NexaBank',
+                const Text('PayMaye',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -61,40 +96,81 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 const _FeatureRow(icon: Icons.bar_chart, text: 'AI-powered spending insights'),
                 const Spacer(),
-                // Login button
+                // Login button — gradient pill matching the reference palette
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     final isLoading = state is AuthLoginInProgress;
-                    return SizedBox(
+                    return Container(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.button)),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: AppColors.authGradient,
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () => context
-                                .read<AuthBloc>()
-                                .add(const AuthLoginRequested()),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(
-                                        AppColors.primary)),
-                              )
-                            : const Text('Sign in with NexaBank ID',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16)),
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.authGradientEnd.withOpacity(0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(AppRadius.button),
+                          onTap: isLoading
+                              ? null
+                              : () => context
+                                  .read<AuthBloc>()
+                                  .add(const AuthLoginRequested()),
+                          child: Center(
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation(Colors.white)),
+                                  )
+                                : const Text('Sign in with PayMaye ID',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                          ),
+                        ),
                       ),
                     );
                   },
+                ),
+                const SizedBox(height: 16),
+                // Sign up link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account? ",
+                      style: TextStyle(color: Colors.white60, fontSize: 14),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.go('/signup'),
+                      child: const Text(
+                        'Create one',
+                        style: TextStyle(
+                          color: AppColors.authAccentYellow,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.authAccentYellow,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Text(

@@ -1,13 +1,8 @@
-// NexaBank Design System — Light & Dark Theme
-//
-// Colors and radii are sourced from AppColors / AppRadius (see
-// app_colors.dart / app_radius.dart) rather than declared inline, so the
-// whole app's look can be edited from those two files.
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 
-class NexaBankTheme {
+class PayMayeTheme {
   static ThemeData light() {
     return ThemeData(
       useMaterial3: true,
@@ -105,8 +100,39 @@ class NexaBankTheme {
     );
   }
 
+  /// Input styling for the auth flow (login/signup), which uses the
+  /// pink→violet gradient palette from AppColors.auth* instead of the
+  /// app-wide mauve AppColors.primary. Apply this locally with a
+  /// `Theme(data: Theme.of(context).copyWith(inputDecorationTheme: ...))`
+  /// wrapper around the signup form — it intentionally does NOT replace
+  /// the global light() theme, so every other screen's text fields
+  /// (transfer amount, search, etc.) keep the standard mauve focus color.
+  static InputDecorationTheme get authInputDecorationTheme {
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      hintStyle: const TextStyle(
+        color: Colors.grey,),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.authGradientEnd),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderSide: const BorderSide(color: AppColors.authGradientEnd, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
+
   static TextTheme _textTheme(Brightness brightness) {
-    final baseColor = brightness == Brightness.light ? AppColors.primary : Colors.white;
+    final baseColor = brightness == Brightness.light ? Colors.black : Colors.white;
 
     return TextTheme(
       displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: baseColor, letterSpacing: -1),
