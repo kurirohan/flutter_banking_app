@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
+import '../features/auth/ui/signup_screen.dart';
 import '../repositories/account_firestore_repository.dart';
 import '../repositories/transaction_firestore_repository.dart';
 import '../repositories/user_firestore_repository.dart';
@@ -26,13 +27,15 @@ class AppRouter {
       redirect: (context, state) {
         final authState = authBloc.state;
         final isLogin = state.matchedLocation == '/login';
+        final isSignup = state.matchedLocation == '/signup';
 
-        if (authState is AuthUnauthenticated && !isLogin) return '/login';
-        if (authState is AuthAuthenticated && isLogin) return '/home';
+        if (authState is AuthUnauthenticated && !isLogin && !isSignup) return '/login';
+        if (authState is AuthAuthenticated && (isLogin || isSignup)) return '/home';
         return null;
       },
       routes: [
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+        GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
         ShellRoute(
           builder: (_, state, child) =>
               _MainShell(location: state.matchedLocation, child: child),
