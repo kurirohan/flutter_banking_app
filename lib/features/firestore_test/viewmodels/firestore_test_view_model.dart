@@ -1,12 +1,17 @@
 // NexaBank — Firestore Test ViewModel
 import 'package:flutter/foundation.dart';
 import '../../accounts/data/account_repository.dart';
-import '../data/firestore_repository.dart';
+import '../data/account_firestore_repository.dart';
+import '../data/transaction_firestore_repository.dart';
 
 class FirestoreTestViewModel extends ChangeNotifier {
-  final FirestoreRepository repository;
+  final AccountFirestoreRepository accountRepository;
+  final TransactionFirestoreRepository transactionRepository;
 
-  FirestoreTestViewModel({required this.repository});
+  FirestoreTestViewModel({
+    required this.accountRepository,
+    required this.transactionRepository,
+  });
 
   bool isLoading = false;
   String? errorMessage;
@@ -20,7 +25,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
 
   Future<void> reloadAccounts() async {
     await _runSafe(() async {
-      final result = await repository.fetchAccounts();
+      final result = await accountRepository.fetchAccounts();
       accounts = result;
       if (selectedAccount != null) {
         selectedAccount = accounts.isEmpty
@@ -46,13 +51,13 @@ class FirestoreTestViewModel extends ChangeNotifier {
 
   Future<void> loadTransactions(String accountId) async {
     await _runSafe(() async {
-      transactions = await repository.fetchTransactions(accountId);
+      transactions = await transactionRepository.fetchTransactions(accountId);
     });
   }
 
   Future<void> createAccount(Account account) async {
     await _runSafe(() async {
-      final created = await repository.createAccount(account);
+      final created = await accountRepository.createAccount(account);
       accounts.add(created);
       await selectAccount(created);
     });
@@ -60,7 +65,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
 
   Future<void> updateAccount(Account account) async {
     await _runSafe(() async {
-      await repository.updateAccount(account);
+      await accountRepository.updateAccount(account);
       final index = accounts.indexWhere((item) => item.id == account.id);
       if (index >= 0) {
         accounts[index] = account;
@@ -73,7 +78,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
 
   Future<void> deleteAccount(String accountId) async {
     await _runSafe(() async {
-      await repository.deleteAccount(accountId);
+      await accountRepository.deleteAccount(accountId);
       accounts.removeWhere((element) => element.id == accountId);
       if (selectedAccount?.id == accountId) {
         selectedAccount = accounts.isNotEmpty ? accounts.first : null;
@@ -90,7 +95,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
       String accountId, Transaction transaction) async {
     await _runSafe(() async {
       final created =
-          await repository.createTransaction(accountId, transaction);
+          await transactionRepository.createTransaction(accountId, transaction);
       transactions.add(created);
     });
   }
@@ -98,7 +103,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
   Future<void> updateTransaction(
       String accountId, Transaction transaction) async {
     await _runSafe(() async {
-      await repository.updateTransaction(accountId, transaction);
+      await transactionRepository.updateTransaction(accountId, transaction);
       final index =
           transactions.indexWhere((item) => item.id == transaction.id);
       if (index >= 0) {
@@ -109,7 +114,7 @@ class FirestoreTestViewModel extends ChangeNotifier {
 
   Future<void> deleteTransaction(String accountId, String transactionId) async {
     await _runSafe(() async {
-      await repository.deleteTransaction(accountId, transactionId);
+      await transactionRepository.deleteTransaction(accountId, transactionId);
       transactions.removeWhere((item) => item.id == transactionId);
     });
   }

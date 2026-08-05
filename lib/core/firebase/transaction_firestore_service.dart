@@ -1,36 +1,17 @@
-// NexaBank — Firestore Service
+// NexaBank — Firestore Transaction Service
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class FirestoreService {
+class TransactionFirestoreService {
   final FirebaseFirestore _firestore;
 
-  FirestoreService({FirebaseFirestore? firestore})
+  TransactionFirestoreService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>> get accounts =>
-      _firestore.collection('accounts');
-
-  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
-      fetchAccounts() async {
-    final snapshot = await accounts.get();
-    return snapshot.docs;
-  }
-
-  Future<DocumentReference<Map<String, dynamic>>> createAccount(
-      Map<String, dynamic> data) async {
-    return await accounts.add(data);
-  }
-
-  Future<void> updateAccount(String id, Map<String, dynamic> data) async {
-    await accounts.doc(id).update(data);
-  }
-
-  Future<void> deleteAccount(String id) async {
-    await accounts.doc(id).delete();
-  }
-
   CollectionReference<Map<String, dynamic>> transactions(String accountId) {
-    return accounts.doc(accountId).collection('transactions');
+    return _firestore
+        .collection('accounts')
+        .doc(accountId)
+        .collection('transactions');
   }
 
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> fetchTransactions(

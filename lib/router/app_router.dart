@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
-import '../features/firestore_test/data/firestore_repository.dart';
+import '../features/firestore_test/data/account_firestore_repository.dart';
+import '../features/firestore_test/data/transaction_firestore_repository.dart';
 import '../features/firestore_test/ui/firestore_test_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
@@ -14,7 +15,8 @@ import '../features/insights/ui/insights_screen.dart';
 class AppRouter {
   static GoRouter createRouter({
     required AuthBloc authBloc,
-    required FirestoreRepository firestoreRepository,
+    required AccountFirestoreRepository accountFirestoreRepository,
+    required TransactionFirestoreRepository transactionFirestoreRepository,
   }) {
     return GoRouter(
       initialLocation: '/home',
@@ -42,8 +44,10 @@ class AppRouter {
                 path: '/insights', builder: (_, __) => const InsightsScreen()),
             GoRoute(
               path: '/firestore-test',
-              builder: (_, __) =>
-                  FirestoreTestScreen(repository: firestoreRepository),
+              builder: (_, __) => FirestoreTestScreen(
+                accountRepository: accountFirestoreRepository,
+                transactionRepository: transactionFirestoreRepository,
+              ),
             ),
           ],
         ),

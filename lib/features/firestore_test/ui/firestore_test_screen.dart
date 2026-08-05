@@ -1,12 +1,18 @@
 // NexaBank — Firestore Test Screen
 import 'package:flutter/material.dart';
 import '../../accounts/data/account_repository.dart';
-import '../data/firestore_repository.dart';
+import '../data/account_firestore_repository.dart';
+import '../data/transaction_firestore_repository.dart';
 import '../viewmodels/firestore_test_view_model.dart';
 
 class FirestoreTestScreen extends StatefulWidget {
-  final FirestoreRepository repository;
-  const FirestoreTestScreen({super.key, required this.repository});
+  final AccountFirestoreRepository accountRepository;
+  final TransactionFirestoreRepository transactionRepository;
+  const FirestoreTestScreen({
+    super.key,
+    required this.accountRepository,
+    required this.transactionRepository,
+  });
 
   @override
   State<FirestoreTestScreen> createState() => _FirestoreTestScreenState();
@@ -18,7 +24,10 @@ class _FirestoreTestScreenState extends State<FirestoreTestScreen> {
   @override
   void initState() {
     super.initState();
-    viewModel = FirestoreTestViewModel(repository: widget.repository);
+    viewModel = FirestoreTestViewModel(
+      accountRepository: widget.accountRepository,
+      transactionRepository: widget.transactionRepository,
+    );
     viewModel.initialize();
   }
 
