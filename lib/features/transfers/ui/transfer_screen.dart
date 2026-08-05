@@ -2,11 +2,13 @@
 // Choose Account -> Choose Recipient -> Enter Amount -> Review -> Success
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../accounts/bloc/account_bloc.dart';
 import '../../accounts/data/account_repository.dart';
 import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/constants/app_spacing.dart';
 import '../bloc/transfer_bloc.dart';
 import '../data/transfer_repository.dart';
 
@@ -19,10 +21,39 @@ class TransferScreen extends StatelessWidget {
       listenWhen: (_, curr) => curr is TransferSuccess || curr is TransferFailed,
       listener: (context, state) {
         if (state is TransferSuccess) {
-          _showSuccessDialog(context, state.result);
+          // Apply the transfer to local account state: debit the balance
+          // and splice the new transaction into history. This is the seam
+          // a real backend would replace later — swap this dispatch for a
+          // response-driven refresh and nothing else here has to change.
+          context.read<AccountBloc>().add(AccountTransferApplied(
+                accountId: state.account.id,
+                amount: state.amount,
+                transaction: Transaction(
+                  id: state.result.transferId,
+                  type: 'DEBIT',
+                  amount: state.amount,
+                  currency: state.account.currency,
+                  bookingDate: DateTime.now(),
+                  description: 'Transfer to ${state.beneficiary.name}',
+                  merchantName: state.beneficiary.name,
+                  category: 'Transfer',
+                ),
+              ));
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Sent ${CurrencyFormatter.format(state.amount, currency: state.account.currency)} to ${state.beneficiary.name}',
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          _showSuccessDialog(context, state);
         } else if (state is TransferFailed) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.reason), backgroundColor: Colors.red),
+            SnackBar(content: Text(state.reason), backgroundColor: AppColors.error),
           );
         }
       },
@@ -60,16 +91,21 @@ class TransferScreen extends StatelessWidget {
       TransferInProgress() => const _LoadingStep(),
       TransferSuccess() || TransferFailed() =>
         const Center(child: Text('Done')),
-      // TODO: Handle this case.
-      TransferState() => throw UnimplementedError(),
+      // Catch-all: TransferState isn't sealed, so the analyzer can't prove
+      // the cases above are exhaustive on their own. This keeps the UI safe
+      // if a new state is ever added without a matching case here.
+      _ => const SizedBox(),
     };
   }
 
-  void _showSuccessDialog(BuildContext context, TransferResult result) {
+  void _showSuccessDialog(BuildContext context, TransferSuccess state) {
+    final result = state.result;
+    final reference = result.transferId.substring(0, 8).toUpperCase();
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.dialog)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -81,10 +117,10 @@ class TransferScreen extends StatelessWidget {
                   color: AppColors.successBackground, shape: BoxShape.circle),
               child: const Icon(Icons.check_circle, color: AppColors.success, size: 44),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             const Text('Transfer Successful!',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               result.rail == 'INSTANT'
                   ? 'Funds will arrive within 2 minutes'
@@ -92,9 +128,13 @@ class TransferScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
             ),
-            const SizedBox(height: 8),
-            Text('Ref: ${result.transferId.substring(0, 8).toUpperCase()}',
-                style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+            const SizedBox(height: AppSpacing.lg),
+            const Divider(),
+            _ReceiptRow('Amount', CurrencyFormatter.format(state.amount, currency: state.account.currency)),
+            _ReceiptRow('From', state.account.name),
+            _ReceiptRow('To', state.beneficiary.name),
+            if (state.reference != null) _ReceiptRow('Note', state.reference!),
+            _ReceiptRow('Reference', reference),
           ],
         ),
         actions: [
@@ -102,10 +142,47 @@ class TransferScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
+                context.read<TransferBloc>().add(const TransferReset());
+                context.go('/accounts');
+              },
+              child: const Text('View Transaction History'),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
                 context.read<TransferBloc>().add(const TransferReset());
               },
-              child: const Text('Done'),
+              child: const Text('Send Another Transfer'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReceiptRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ReceiptRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ),
         ],
@@ -180,7 +257,7 @@ class _AccountTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.input),
                 ),
                 child: const Icon(Icons.account_balance_wallet, color: AppColors.primary),
@@ -227,10 +304,10 @@ class _BeneficiaryStep extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Text('Send to', style: Theme.of(context).textTheme.titleLarge),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Search beneficiaries',
               prefixIcon: Icon(Icons.search),
             ),
@@ -248,7 +325,7 @@ class _BeneficiaryStep extends StatelessWidget {
                         final b = beneficiaries[i];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                             child: Text(b.name[0],
                                 style: const TextStyle(
                                     color: AppColors.primary,

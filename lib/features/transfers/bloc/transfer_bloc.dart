@@ -85,8 +85,18 @@ class TransferReadyToSubmit extends TransferState {
 class TransferInProgress extends TransferState { const TransferInProgress(); }
 
 class TransferSuccess extends TransferState {
+  final Account account;
+  final Beneficiary beneficiary;
+  final double amount;
+  final String? reference;
   final TransferResult result;
-  const TransferSuccess(this.result);
+  const TransferSuccess({
+    required this.account,
+    required this.beneficiary,
+    required this.amount,
+    required this.reference,
+    required this.result,
+  });
   @override List<Object?> get props => [result.transferId];
 }
 
@@ -169,7 +179,13 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
         amount: current.amount,
         reference: current.reference,
       ));
-      emit(TransferSuccess(result));
+      emit(TransferSuccess(
+        account: current.account,
+        beneficiary: current.beneficiary,
+        amount: current.amount,
+        reference: current.reference,
+        result: result,
+      ));
     } on TransferDeclinedException catch (ex) {
       emit(TransferFailed(ex.reason));
     } catch (_) {

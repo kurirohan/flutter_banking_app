@@ -73,6 +73,9 @@ class Beneficiary {
 }
 
 class RemoteTransferRepository implements TransferRepository {
+  // Not read yet: this repository returns mock data for the prototype.
+  // Kept so swapping in real Dio calls later doesn't change the constructor.
+  // ignore: unused_field
   final ApiClient _client;
   RemoteTransferRepository(this._client);
 

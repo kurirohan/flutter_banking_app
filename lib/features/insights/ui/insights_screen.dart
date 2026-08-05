@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/insights_bloc.dart';
+import '../../accounts/bloc/account_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 
 class InsightsScreen extends StatefulWidget {
@@ -16,22 +17,41 @@ class _InsightsScreenState extends State<InsightsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<InsightsBloc>().add(const InsightsLoadRequested('acc_001'));
+    _maybeLoadInsights(context.read<AccountBloc>().state);
+  }
+
+  // Only fetch if we don't already have insights loaded — revisiting this
+  // tab shouldn't discard state any more than Home should (same fix as
+  // HomeScreen's initState; see the comment there for why it matters).
+  // Also handles the case where AccountBloc is still loading when this
+  // screen first mounts: the BlocListener below re-checks once it resolves.
+  void _maybeLoadInsights(AccountState accountState) {
+    if (accountState is! AccountLoaded) return;
+    final insightsBloc = context.read<InsightsBloc>();
+    if (insightsBloc.state is InsightsLoaded) return;
+    final accountId = accountState.selectedAccountId ??
+        (accountState.accounts.isNotEmpty ? accountState.accounts.first.id : null);
+    if (accountId != null) {
+      insightsBloc.add(InsightsLoadRequested(accountId));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Spending Insights')),
-      body: BlocBuilder<InsightsBloc, InsightsState>(
-        builder: (context, state) {
-          return switch (state) {
-            InsightsLoading() => const Center(child: CircularProgressIndicator()),
-            InsightsLoaded() => _InsightsContent(state: state),
-            InsightsError(:final message) => Center(child: Text(message)),
-            _ => const SizedBox(),
-          };
-        },
+    return BlocListener<AccountBloc, AccountState>(
+      listener: (context, accountState) => _maybeLoadInsights(accountState),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Spending Insights')),
+        body: BlocBuilder<InsightsBloc, InsightsState>(
+          builder: (context, state) {
+            return switch (state) {
+              InsightsLoading() => const Center(child: CircularProgressIndicator()),
+              InsightsLoaded() => _InsightsContent(state: state),
+              InsightsError(:final message) => Center(child: Text(message)),
+              _ => const SizedBox(),
+            };
+          },
+        ),
       ),
     );
   }
@@ -141,7 +161,7 @@ class _InsightsContentState extends State<_InsightsContent> {
                     toY: e.value,
                     color: e.key == widget.state.monthlyTotals.length - 1
                         ? AppColors.primary
-                        : AppColors.primary.withOpacity(0.3),
+                        : AppColors.primary.withValues(alpha: 0.3),
                     width: 30,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                   ),
@@ -225,13 +245,13 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: color.withOpacity(0.7), fontSize: 12)),
+            Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 12)),
             const SizedBox(height: 4),
             Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.bold)),
           ],

@@ -22,6 +22,23 @@ class AccountTransactionsRequested extends AccountEvent {
   @override List<Object?> get props => [accountId, page];
 }
 
+/// Applies a completed transfer to local state: debits the source account's
+/// balance and prepends the resulting transaction to the visible history.
+/// This is what lets the "no backend yet" prototype still behave like a
+/// real one — swapping in a real repository later just means this event
+/// stops being needed (the backend would push the updated state instead).
+class AccountTransferApplied extends AccountEvent {
+  final String accountId;
+  final double amount;
+  final Transaction transaction;
+  const AccountTransferApplied({
+    required this.accountId,
+    required this.amount,
+    required this.transaction,
+  });
+  @override List<Object?> get props => [accountId, amount, transaction];
+}
+
 // ── States ──────────────────────────────────
 abstract class AccountState extends Equatable {
   const AccountState();
@@ -87,6 +104,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     on<AccountRefreshRequested>(_onRefresh);
     on<AccountSelected>(_onSelect);
     on<AccountTransactionsRequested>(_onTransactions);
+    on<AccountTransferApplied>(_onTransferApplied);
   }
 
   Future<void> _onFetch(AccountFetchRequested _, Emitter<AccountState> emit) async {
@@ -141,6 +159,60 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
         emit(current.copyWith(transactions: txns, transactionsLoading: false));
       } catch (_) {
         emit(current.copyWith(transactionsLoading: false));
+      }
+    }
+  }
+
+  Future<void> _onTransferApplied(
+    AccountTransferApplied event,
+    Emitter<AccountState> emit,
+  ) async {
+    final current = state;
+    if (current is! AccountLoaded) return;
+
+    final updatedAccounts = current.accounts
+        .map((a) => a.id == event.accountId
+            ? a.copyWith(
+                balance: a.balance - event.amount,
+                availableBalance: a.availableBalance - event.amount,
+              )
+            : a)
+        .toList();
+
+    if (current.selectedAccountId == event.accountId) {
+      // Already viewing the debited account: prepend, no refetch needed.
+      emit(current.copyWith(
+        accounts: updatedAccounts,
+        transactions: [event.transaction, ...current.transactions],
+      ));
+      return;
+    }
+
+    // Debited account isn't the one currently in view — make it the active
+    // one and load its history, so "Success -> Transaction History" always
+    // lands on a list that actually contains the transfer that was just made.
+    emit(current.copyWith(
+      accounts: updatedAccounts,
+      selectedAccountId: event.accountId,
+      transactions: const [],
+      transactionsLoading: true,
+    ));
+    try {
+      final txns = await _repo.fetchTransactions(event.accountId);
+      final latest = state;
+      if (latest is AccountLoaded) {
+        emit(latest.copyWith(
+          transactions: [event.transaction, ...txns],
+          transactionsLoading: false,
+        ));
+      }
+    } catch (_) {
+      final latest = state;
+      if (latest is AccountLoaded) {
+        emit(latest.copyWith(
+          transactions: [event.transaction],
+          transactionsLoading: false,
+        ));
       }
     }
   }

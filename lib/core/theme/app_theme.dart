@@ -75,7 +75,7 @@ class NexaBankTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
-        indicatorColor: AppColors.primary.withOpacity(0.12),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
         ),
@@ -116,9 +116,9 @@ class NexaBankTheme {
       titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: baseColor),
       titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: baseColor),
       bodyLarge: TextStyle(fontSize: 16, color: baseColor),
-      bodyMedium: TextStyle(fontSize: 14, color: baseColor.withOpacity(0.7)),
+      bodyMedium: TextStyle(fontSize: 14, color: baseColor.withValues(alpha: 0.7)),
       labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: baseColor),
-      labelMedium: TextStyle(fontSize: 12, color: baseColor.withOpacity(0.6)),
+      labelMedium: TextStyle(fontSize: 12, color: baseColor.withValues(alpha: 0.6)),
     );
   }
 }

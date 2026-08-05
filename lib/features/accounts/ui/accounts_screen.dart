@@ -174,7 +174,7 @@ class _TxnRow extends StatelessWidget {
       leading: Container(
         width: 44, height: 44,
         decoration: BoxDecoration(
-          color: isCredit ? Colors.green.withOpacity(0.1) : Colors.grey[100],
+          color: isCredit ? Colors.green.withValues(alpha: 0.1) : Colors.grey[100],
           shape: BoxShape.circle,
         ),
         child: Icon(

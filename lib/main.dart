@@ -71,7 +71,7 @@ class NexaBankApp extends StatelessWidget {
           create: (_) => AuthBloc(authService)..add(const AuthCheckRequested()),
         ),
         BlocProvider(
-          create: (_) => AccountBloc(accountRepository),
+          create: (_) => AccountBloc(accountRepository)..add(const AccountFetchRequested()),
           lazy: false,
         ),
         BlocProvider(

@@ -20,6 +20,20 @@ class Account {
     required this.type,
   });
 
+  Account copyWith({
+    double? balance,
+    double? availableBalance,
+  }) =>
+      Account(
+        id: id,
+        name: name,
+        accountNumber: accountNumber,
+        balance: balance ?? this.balance,
+        availableBalance: availableBalance ?? this.availableBalance,
+        currency: currency,
+        type: type,
+      );
+
   factory Account.fromJson(Map<String, dynamic> json) => Account(
         id: json['id'] as String,
         name: json['name'] as String,
@@ -72,6 +86,9 @@ abstract class AccountRepository {
 }
 
 class RemoteAccountRepository implements AccountRepository {
+  // Not read yet: this repository returns mock data for the prototype.
+  // Kept so swapping in real Dio calls later doesn't change the constructor.
+  // ignore: unused_field
   final ApiClient _client;
   RemoteAccountRepository(this._client);
 

@@ -22,7 +22,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AccountBloc>().add(const AccountFetchRequested());
+    // AccountBloc is booted once at app startup (see main.dart). This is a
+    // fallback only — e.g. if the initial boot fetch is still in flight or
+    // failed before this screen ever mounted — so revisiting the Home tab
+    // never re-triggers a full refetch that would clobber local state
+    // (like a just-completed transfer's balance/transaction update).
+    final bloc = context.read<AccountBloc>();
+    if (bloc.state is! AccountLoaded) {
+      bloc.add(const AccountFetchRequested());
+    }
   }
 
   @override
@@ -195,7 +203,7 @@ class _AccountCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.cardLarge),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.35),
+            color: color.withValues(alpha: 0.35),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
@@ -280,7 +288,7 @@ class _QuickAction extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(icon, color: AppColors.primary, size: 28),

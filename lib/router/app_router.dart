@@ -1,6 +1,5 @@
 // NexaBank — GoRouter Configuration
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/bloc/auth_bloc.dart';
@@ -28,7 +27,7 @@ class AppRouter {
       routes: [
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
         ShellRoute(
-          builder: (_, state, child) => _MainShell(child: child, location: state.matchedLocation),
+          builder: (_, state, child) => _MainShell(location: state.matchedLocation, child: child),
           routes: [
             GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
             GoRoute(path: '/accounts', builder: (_, __) => const AccountsScreen()),
