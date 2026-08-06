@@ -21,24 +21,13 @@ class TransferScreen extends StatelessWidget {
       listenWhen: (_, curr) => curr is TransferSuccess || curr is TransferFailed,
       listener: (context, state) {
         if (state is TransferSuccess) {
-          // Apply the transfer to local account state: debit the balance
-          // and splice the new transaction into history. This is the seam
-          // a real backend would replace later — swap this dispatch for a
-          // response-driven refresh and nothing else here has to change.
-          context.read<AccountBloc>().add(AccountTransferApplied(
-                accountId: state.account.id,
-                amount: state.amount,
-                transaction: Transaction(
-                  id: state.result.transferId,
-                  type: 'DEBIT',
-                  amount: state.amount,
-                  currency: state.account.currency,
-                  bookingDate: DateTime.now(),
-                  description: 'Transfer to ${state.beneficiary.name}',
-                  merchantName: state.beneficiary.name,
-                  category: 'Transfer',
-                ),
-              ));
+          // MockTransferRepository already applied the debit + new
+          // transaction to the shared data source — this just tells
+          // AccountBloc to re-read it (balances + this account's history)
+          // so Home/Accounts reflect it immediately, from any screen.
+          context.read<AccountBloc>().add(
+                AccountRefreshRequested(focusAccountId: state.account.id),
+              );
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -89,13 +78,13 @@ class TransferScreen extends StatelessWidget {
             amount: amount,
             reference: reference),
       TransferInProgress() => const _LoadingStep(),
-      TransferSuccess() || TransferFailed() =>
-        const Center(child: Text('Done')),
-      // Catch-all: TransferState isn't sealed, so the analyzer can't prove
-      // the cases above are exhaustive on their own. This keeps the UI safe
-      // if a new state is ever added without a matching case here.
-      _ => const SizedBox(),
+      // The dialog (shown from the listener) carries the actual success
+      // receipt; this idle body just sits behind it.
+      TransferSuccess() => const SizedBox(),
+      TransferFailed(:final reason) => _FailedStep(reason: reason),
     };
+    // No wildcard needed: TransferState is `sealed` (see transfer_bloc.dart),
+    // so the analyzer can verify every one of its 7 subtypes is handled above.
   }
 
   void _showSuccessDialog(BuildContext context, TransferSuccess state) {
@@ -406,61 +395,79 @@ class _AmountStepState extends State<_AmountStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Sending to', style: TextStyle(color: AppColors.inkMuted, fontSize: 13)),
-          const SizedBox(height: 4),
-          Text(widget.beneficiary.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
-          Text(widget.beneficiary.bankName,
-              style: const TextStyle(color: AppColors.inkFaint)),
-          const SizedBox(height: AppSpacing.huge),
-          Center(
-            child: Text(
-              CurrencyFormatter.format(_amount),
-              style: const TextStyle(
-                  fontSize: 46, fontWeight: FontWeight.w800, letterSpacing: -1, color: AppColors.ink),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Sending to', style: TextStyle(color: AppColors.inkMuted, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text(widget.beneficiary.name,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                Text(widget.beneficiary.bankName,
+                    style: const TextStyle(color: AppColors.inkFaint)),
+                const SizedBox(height: AppSpacing.huge),
+                Center(
+                  child: Text(
+                    CurrencyFormatter.format(_amount),
+                    style: const TextStyle(
+                        fontSize: 46, fontWeight: FontWeight.w800, letterSpacing: -1, color: AppColors.ink),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                TextField(
+                  controller: _controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (PHP)',
+                    prefixText: '₱ ',
+                  ),
+                  onChanged: (v) {
+                    setState(() => _amount = double.tryParse(v) ?? 0);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextField(
+                  controller: _referenceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reference (optional)',
+                    hintText: 'e.g. Rent July 2024',
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xxl),
-          TextField(
-            controller: _controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(fontWeight: FontWeight.w700),
-            decoration: const InputDecoration(
-              labelText: 'Amount (PHP)',
-              prefixText: '₱ ',
+        ),
+        // Pinned outside the scroll view — with a Spacer inside a plain
+        // Column, this button could be pushed out of the viewport (and
+        // effectively disappear) once the keyboard shrank the available
+        // height. This layout guarantees it's always reachable.
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 0, AppSpacing.xxl, AppSpacing.xxl),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _amount > 0
+                    ? () {
+                        context.read<TransferBloc>().add(TransferAmountSet(_amount));
+                        if (_referenceController.text.isNotEmpty) {
+                          context.read<TransferBloc>().add(
+                              TransferReferenceSet(_referenceController.text));
+                        }
+                      }
+                    : null,
+                child: const Text('Continue'),
+              ),
             ),
-            onChanged: (v) {
-              setState(() => _amount = double.tryParse(v) ?? 0);
-            },
           ),
-          const SizedBox(height: AppSpacing.lg),
-          TextField(
-            controller: _referenceController,
-            decoration: const InputDecoration(
-              labelText: 'Reference (optional)',
-              hintText: 'e.g. Rent July 2024',
-            ),
-          ),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: _amount > 0
-                ? () {
-                    context.read<TransferBloc>().add(TransferAmountSet(_amount));
-                    if (_referenceController.text.isNotEmpty) {
-                      context.read<TransferBloc>().add(
-                          TransferReferenceSet(_referenceController.text));
-                    }
-                  }
-                : null,
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -479,46 +486,64 @@ class _ReviewStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Review transfer', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xl),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            ),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ReviewRow('From', '${account.name} (${account.accountNumber})'),
-                _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
-                _ReviewRow('To', beneficiary.name),
-                _ReviewRow('Bank', beneficiary.bankName),
-                _ReviewRow('Account', beneficiary.accountNumber),
-                if (reference != null) _ReviewRow('Reference', reference!),
-                _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours', isLast: true),
+                Text('Review transfer', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                  ),
+                  child: Column(
+                    children: [
+                      _ReviewRow('From', '${account.name} (${account.accountNumber})'),
+                      _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
+                      _ReviewRow('To', beneficiary.name),
+                      _ReviewRow('Bank', beneficiary.bankName),
+                      _ReviewRow('Account', beneficiary.accountNumber),
+                      if (reference != null) _ReviewRow('Reference', reference!),
+                      _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours', isLast: true),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          const Spacer(),
-          const Text(
-            'By tapping Confirm, you authorise this payment.',
-            style: TextStyle(color: AppColors.inkFaint, fontSize: 12),
-            textAlign: TextAlign.center,
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.sm, AppSpacing.xxl, AppSpacing.xxl),
+            child: Column(
+              children: [
+                const Text(
+                  'By tapping Confirm, you authorise this payment.',
+                  style: TextStyle(color: AppColors.inkFaint, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        context.read<TransferBloc>().add(const TransferSubmitted()),
+                    child: const Text('Confirm transfer'),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          ElevatedButton(
-            onPressed: () =>
-                context.read<TransferBloc>().add(const TransferSubmitted()),
-            child: const Text('Confirm transfer'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -562,4 +587,46 @@ class _LoadingStep extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// Reachable from [TransferFailed] — e.g. the mock backend declining a
+/// transfer for exceeding the limit or insufficient funds. The listener
+/// already surfaces [TransferFailed.reason] as a snackbar; this gives the
+/// screen itself a way forward instead of a dead end.
+class _FailedStep extends StatelessWidget {
+  final String reason;
+  const _FailedStep({required this.reason});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: const BoxDecoration(color: AppColors.errorBackground, shape: BoxShape.circle),
+              child: const Icon(Icons.close_rounded, color: AppColors.error, size: 40),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Text('Transfer failed',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            const SizedBox(height: AppSpacing.xs),
+            Text(reason, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkMuted)),
+            const SizedBox(height: AppSpacing.xxl),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => context.read<TransferBloc>().add(const TransferReset()),
+                child: const Text('Try again'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

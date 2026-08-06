@@ -36,7 +36,12 @@ class TransferSubmitted extends TransferEvent { const TransferSubmitted(); }
 class TransferReset extends TransferEvent { const TransferReset(); }
 
 // States
-abstract class TransferState extends Equatable {
+//
+// `sealed` (not just `abstract`) lets the `switch (state) { ... }` in
+// transfer_screen.dart be exhaustive without a wildcard `_` case: it tells
+// the analyzer every subclass of TransferState lives in this file, so once
+// each of them has a case, nothing is left uncovered.
+sealed class TransferState extends Equatable {
   const TransferState();
   @override List<Object?> get props => [];
 }

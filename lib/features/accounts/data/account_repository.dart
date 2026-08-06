@@ -1,5 +1,7 @@
 // PayMaye — Account Repository
+import '../../../core/constants/demo_data.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../shared/services/mock_bank_data_source.dart';
 
 class Account {
   final String id;
@@ -85,37 +87,20 @@ abstract class AccountRepository {
   Future<List<Transaction>> fetchTransactions(String accountId, {int page = 0});
 }
 
-class RemoteAccountRepository implements AccountRepository {
-  // Not read yet: this repository returns mock data for the prototype.
-  // Kept so swapping in real Dio calls later doesn't change the constructor.
-  // ignore: unused_field
-  final ApiClient _client;
-  RemoteAccountRepository(this._client);
+/// Offline implementation backed by the shared [MockBankDataSource]. Every
+/// read goes through that single in-memory store, so a transfer applied via
+/// [MockTransferRepository] is immediately visible here too — including
+/// after switching accounts, pulling to refresh, or navigating away and
+/// back — because there's exactly one source of truth instead of each
+/// fetch re-generating fresh hardcoded data.
+class MockAccountRepository implements AccountRepository {
+  final MockBankDataSource _dataSource;
+  MockAccountRepository(this._dataSource);
 
   @override
   Future<List<Account>> fetchAccounts() async {
-    // Simulate API response for demo
-    await Future.delayed(const Duration(milliseconds: 800));
-    return [
-      const Account(
-        id: 'acc_001',
-        name: 'Personal Current Account',
-        accountNumber: '**** **** **** 4521',
-        balance: 12500.75,
-        availableBalance: 12000.00,
-        currency: 'PHP',
-        type: 'current',
-      ),
-      const Account(
-        id: 'acc_002',
-        name: 'Savings Account',
-        accountNumber: '**** **** **** 8834',
-        balance: 45200.00,
-        availableBalance: 45200.00,
-        currency: 'PHP',
-        type: 'savings',
-      ),
-    ];
+    await Future.delayed(DemoData.accountsFetchDelay);
+    return _dataSource.accounts;
   }
 
   @override
@@ -123,59 +108,29 @@ class RemoteAccountRepository implements AccountRepository {
     String accountId, {
     int page = 0,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    final now = DateTime.now();
-    return [
-      Transaction(
-        id: 'txn_001',
-        type: 'DEBIT',
-        amount: 4.50,
-        currency: 'PHP',
-        bookingDate: now.subtract(const Duration(hours: 2)),
-        description: 'Starbucks — Coffee',
-        merchantName: 'Starbucks',
-        category: 'Food & Drinks',
-      ),
-      Transaction(
-        id: 'txn_002',
-        type: 'DEBIT',
-        amount: 89.99,
-        currency: 'PHP',
-        bookingDate: now.subtract(const Duration(days: 1)),
-        description: 'Amazon.com — Purchase',
-        merchantName: 'Amazon',
-        category: 'Shopping',
-      ),
-      Transaction(
-        id: 'txn_003',
-        type: 'DEBIT',
-        amount: 15.99,
-        currency: 'PHP',
-        bookingDate: now.subtract(const Duration(days: 2)),
-        description: 'Netflix — Monthly',
-        merchantName: 'Netflix',
-        category: 'Entertainment',
-      ),
-      Transaction(
-        id: 'txn_004',
-        type: 'CREDIT',
-        amount: 5000.00,
-        currency: 'PHP',
-        bookingDate: now.subtract(const Duration(days: 3)),
-        description: 'Salary Credit — July 2024',
-        merchantName: null,
-        category: 'Income',
-      ),
-      Transaction(
-        id: 'txn_005',
-        type: 'DEBIT',
-        amount: 45.00,
-        currency: 'PHP',
-        bookingDate: now.subtract(const Duration(days: 5)),
-        description: 'Shell Gas Station',
-        merchantName: 'Shell',
-        category: 'Transport',
-      ),
-    ];
+    await Future.delayed(DemoData.transactionsFetchDelay);
+    return _dataSource.transactionsFor(accountId);
+  }
+}
+
+/// Placeholder for a real backend integration (REST/GraphQL/Firebase).
+/// Implements the same [AccountRepository] interface as
+/// [MockAccountRepository], so going live is a matter of filling these in
+/// and swapping the instance constructed in main.dart — no BLoC or UI
+/// changes required.
+class ApiAccountRepository implements AccountRepository {
+  final ApiClient _client;
+  ApiAccountRepository(this._client);
+
+  @override
+  Future<List<Account>> fetchAccounts() {
+    // TODO(backend): _client.get('/accounts', fromJson: ...)
+    throw UnimplementedError('ApiAccountRepository.fetchAccounts is not wired up yet.');
+  }
+
+  @override
+  Future<List<Transaction>> fetchTransactions(String accountId, {int page = 0}) {
+    // TODO(backend): _client.get('/accounts/$accountId/transactions', ...)
+    throw UnimplementedError('ApiAccountRepository.fetchTransactions is not wired up yet.');
   }
 }

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/auth/auth_service.dart';
-import 'core/network/dio_client.dart';
 import 'core/storage/secure_token_store.dart';
 import 'core/theme/app_theme.dart';
 import 'features/accounts/bloc/account_bloc.dart';
@@ -16,6 +15,7 @@ import 'features/insights/bloc/insights_bloc.dart';
 import 'features/transfers/bloc/transfer_bloc.dart';
 import 'features/transfers/data/transfer_repository.dart';
 import 'router/app_router.dart';
+import 'shared/services/mock_bank_data_source.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,14 +35,19 @@ void main() async {
   // Initialize dependencies
   final tokenStore = SecureTokenStore();
   final authService = AuthService(tokenStore);
-  final apiClient = ApiClient(
-    getAccessToken: authService.getValidAccessToken,
-    onUnauthorized: authService.logout,
-  );
 
-  // Repositories
-  final accountRepository = RemoteAccountRepository(apiClient);
-  final transferRepository = RemoteTransferRepository(apiClient);
+  // Repositories — both backed by one shared MockBankDataSource instance,
+  // so a transfer applied through TransferRepository is immediately visible
+  // through AccountRepository (balance + transaction history), no matter
+  // which screen or event triggers the next read.
+  //
+  // Swap point: to go live, construct an ApiClient (see
+  // core/network/dio_client.dart) and pass it to ApiAccountRepository /
+  // ApiTransferRepository instead — both already implement the same
+  // interfaces, so no BLoC or screen changes are needed.
+  final dataSource = MockBankDataSource();
+  final accountRepository = MockAccountRepository(dataSource);
+  final transferRepository = MockTransferRepository(dataSource);
 
   runApp(PayMayeApp(
     authService: authService,

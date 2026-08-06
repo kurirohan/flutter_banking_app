@@ -8,25 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pay_maye/core/auth/auth_service.dart';
-import 'package:pay_maye/core/network/dio_client.dart';
 import 'package:pay_maye/core/storage/secure_token_store.dart';
 import 'package:pay_maye/features/accounts/data/account_repository.dart';
 import 'package:pay_maye/features/transfers/data/transfer_repository.dart';
 import 'package:pay_maye/main.dart';
+import 'package:pay_maye/shared/services/mock_bank_data_source.dart';
 
 void main() {
   testWidgets('PayMayeApp builds and settles without throwing', (tester) async {
     final tokenStore = SecureTokenStore();
     final authService = AuthService(tokenStore);
-    final apiClient = ApiClient(
-      getAccessToken: authService.getValidAccessToken,
-      onUnauthorized: authService.logout,
-    );
+    final dataSource = MockBankDataSource();
 
     await tester.pumpWidget(PayMayeApp(
       authService: authService,
-      accountRepository: RemoteAccountRepository(apiClient),
-      transferRepository: RemoteTransferRepository(apiClient),
+      accountRepository: MockAccountRepository(dataSource),
+      transferRepository: MockTransferRepository(dataSource),
     ));
 
     // Let async auth-check + navigation settle.
