@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pay_maye/core/theme/app_radius.dart';
 import 'package:shimmer/shimmer.dart';
 import '/models/account.dart';
 import '/models/transaction.dart' as txn_model;
@@ -140,6 +141,191 @@ class _HomeContent extends StatelessWidget {
             : _TransactionList(transactions: state.transactions),
         const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
       ],
+    );
+  }
+}
+
+class _InsightsPreview extends StatelessWidget {
+  final List<txn_model.Transaction> transactions;
+  const _InsightsPreview({required this.transactions});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = today.subtract(const Duration(days: 6));
+    final days = List.generate(7, (i) => start.add(Duration(days: i)));
+
+    final totals = <DateTime, double>{for (final d in days) d: 0};
+    String? currency;
+
+    for (final txn in transactions) {
+      if (txn.isCredit()) continue;
+      final d = DateTime(
+          txn.dateCreated.year, txn.dateCreated.month, txn.dateCreated.day);
+      if (totals.containsKey(d)) {
+        totals[d] = totals[d]! + txn.amount;
+        currency ??= txn.currency;
+      }
+    }
+
+    final maxValue = totals.values.fold<double>(0, (m, v) => v > m ? v : m);
+    final weekTotal = totals.values.fold<double>(0, (a, b) => a + b);
+    final hasData = weekTotal > 0;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.xxl, AppSpacing.xxxl, AppSpacing.xxl, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Spending Insights',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.homeTextPrimary),
+              ),
+              TextButton(
+                onPressed: () => context.go('/insights'),
+                style: TextButton.styleFrom(
+                    foregroundColor: AppColors.homePrimaryPurple),
+                child: const Text('See All'),
+              ),
+            ],
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.homeSurface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.homeBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.homePrimaryDeepPlum.withOpacity(.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: hasData
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Spent this week',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.homeTextSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        CurrencyFormatter.format(weekTotal,
+                            currency: currency ?? 'PHP'),
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.homeTextPrimary),
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        height: 84,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: days.map((d) {
+                            final value = totals[d]!;
+                            final ratio =
+                                maxValue == 0 ? 0.0 : value / maxValue;
+                            final isToday = d.year == today.year &&
+                                d.month == today.month &&
+                                d.day == today.day;
+                            return Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 400),
+                                      curve: Curves.easeOutCubic,
+                                      height: 10 + ratio * 50,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(6),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: isToday
+                                              ? [
+                                                  AppColors.homePrimaryDeepPlum,
+                                                  AppColors
+                                                      .homeSecondaryLavender,
+                                                ]
+                                              : [
+                                                  AppColors.homePrimaryDeepPlum
+                                                      .withOpacity(.2),
+                                                  AppColors
+                                                      .homeSecondaryLavender
+                                                      .withOpacity(.2),
+                                                ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      DateFormat('E').format(d).substring(0, 1),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: isToday
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: isToday
+                                            ? AppColors.homePrimaryPurple
+                                            : AppColors.homeTextSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.homePrimaryPurple.withOpacity(.1),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.insights_rounded,
+                            color: AppColors.homePrimaryPurple),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Your weekly spending will show up here once you '
+                          'start transacting.',
+                          style: TextStyle(
+                              fontSize: 13, color: AppColors.homeTextSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -309,7 +495,8 @@ class _AccountCardsSectionState extends State<_AccountCardsSection> {
                 child: _AccountCard(
                   account: acc,
                   paletteIndex: i,
-                  isSelected: acc.id == state.selectedAccountId,
+                  isSelected: acc.id == widget.state.selectedAccountId,
+                  balanceHidden: _balanceHidden,
                 ),
               );
             },
@@ -319,16 +506,16 @@ class _AccountCardsSectionState extends State<_AccountCardsSection> {
         // Page indicator dots
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: state.accounts.asMap().entries.map((e) {
-            final activeIndex = state.accounts
-                .indexWhere((a) => a.id == state.selectedAccountId);
+          children: widget.state.accounts.asMap().entries.map((e) {
+            final activeIndex = widget.state.accounts
+                .indexWhere((a) => a.id == widget.state.selectedAccountId);
             final isActive = e.key == activeIndex;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.symmetric(horizontal: 3),
               width: e.key ==
-                      state.accounts
-                          .indexWhere((a) => a.id == state.selectedAccountId)
+                      widget.state.accounts.indexWhere(
+                          (a) => a.id == widget.state.selectedAccountId)
                   ? 20
                   : 6,
               height: 6,
@@ -351,8 +538,11 @@ class _AccountCard extends StatefulWidget {
   final int paletteIndex;
   final bool isSelected;
   final ValueNotifier<bool> balanceHidden;
+
   const _AccountCard({
+    super.key,
     required this.account,
+    required this.paletteIndex,
     required this.isSelected,
     required this.balanceHidden,
   });
@@ -802,15 +992,12 @@ class _QuickActionsSection extends StatelessWidget {
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
-  final int paletteIndex;
   final VoidCallback onTap;
   const _QuickAction(
       {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final pair =
-        AppColors.pastelPalette[paletteIndex % AppColors.pastelPalette.length];
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();

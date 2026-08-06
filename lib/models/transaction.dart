@@ -68,4 +68,6 @@ class Transaction {
           description: description ?? this.description,
           category: category ?? this.category,
           dateCreated: dateCreated ?? this.dateCreated);
+
+  bool isCredit() => this.type == TransactionType.credit;
 }

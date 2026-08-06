@@ -159,7 +159,7 @@ class _AccountTabs extends StatelessWidget {
                               TextStyle(color: Colors.grey[600], fontSize: 12)),
                       Text(
                         CurrencyFormatter.format(
-                          state.selectedAccount!.availableBalance,
+                          state.selectedAccount!.balance,
                           currency: state.selectedAccount!.currency,
                         ),
                         style: const TextStyle(

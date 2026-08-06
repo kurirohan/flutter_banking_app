@@ -19,7 +19,6 @@ import 'repositories/transaction_firestore_repository.dart';
 import 'repositories/user_firestore_repository.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/insights/bloc/insights_bloc.dart';
-import 'features/transfers/bloc/transfer_bloc.dart';
 import 'features/transfers/data/transfer_repository.dart';
 import 'router/app_router.dart';
 
@@ -98,9 +97,6 @@ class PayMayeApp extends StatelessWidget {
             transactionFirestoreRepository,
           )..add(const AccountFetchRequested()),
           lazy: false,
-        ),
-        BlocProvider(
-          create: (_) => TransferBloc(transferRepository),
         ),
         BlocProvider(
           create: (_) => InsightsBloc(transactionFirestoreRepository),

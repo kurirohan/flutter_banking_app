@@ -1,10 +1,11 @@
 // PayMaye — Account BLoC (full state machine)
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pay_maye/services/transaction_firestore_service.dart';
 import '../../../repositories/account_firestore_repository.dart';
 import '../../../repositories/transaction_firestore_repository.dart';
-import 'package:nexa_bank/models/account.dart';
-import 'package:nexa_bank/models/transaction.dart';
+import '/models/account.dart';
+import '/models/transaction.dart';
 
 // ── Events ──────────────────────────────────
 abstract class AccountEvent extends Equatable {
@@ -50,7 +51,8 @@ class AccountTransferApplied extends AccountEvent {
     required this.amount,
     required this.transaction,
   });
-  @override List<Object?> get props => [accountId, amount, transaction];
+  @override
+  List<Object?> get props => [accountId, amount, transaction];
 }
 
 // ── States ──────────────────────────────────
@@ -143,11 +145,11 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       AccountFetchRequested _, Emitter<AccountState> emit) async {
     emit(const AccountLoading());
     // try {
-      final accounts = await _accountRepo.fetchAccounts();
-      emit(AccountLoaded(
-        accounts: accounts,
-        selectedAccountId: accounts.isNotEmpty ? accounts.first.id : null,
-      ));
+    final accounts = await _accountRepo.fetchAccounts();
+    emit(AccountLoaded(
+      accounts: accounts,
+      selectedAccountId: accounts.isNotEmpty ? accounts.first.id : null,
+    ));
     // } catch (e) {
     //   emit(const AccountError(
     //     message: 'Failed to load accounts. Please try again.',
@@ -208,7 +210,6 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
         .map((a) => a.id == event.accountId
             ? a.copyWith(
                 balance: a.balance - event.amount,
-                availableBalance: a.availableBalance - event.amount,
               )
             : a)
         .toList();
@@ -232,6 +233,8 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       transactionsLoading: true,
     ));
     try {
+      TransactionFirestoreService _service = TransactionFirestoreService();
+      var _repo = TransactionFirestoreRepository(_service);
       final txns = await _repo.fetchTransactions(event.accountId);
       final latest = state;
       if (latest is AccountLoaded) {

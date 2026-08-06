@@ -1,8 +1,8 @@
 // PayMaye — Insights BLoC
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pay_maye/models/transaction.dart';
 import '../../../repositories/transaction_firestore_repository.dart';
-import 'package:nexa_bank/models/transaction.dart';
 
 // Events
 abstract class InsightsEvent extends Equatable {

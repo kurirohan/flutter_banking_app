@@ -10,10 +10,8 @@ import '../features/auth/ui/signup_screen.dart';
 import '../repositories/account_firestore_repository.dart';
 import '../repositories/transaction_firestore_repository.dart';
 import '../repositories/user_firestore_repository.dart';
-import '../features/firestore_test/ui/firestore_test_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
-import '../features/transfers/ui/transfer_screen.dart';
 import '../features/insights/ui/insights_screen.dart';
 
 class AppRouter {
@@ -48,17 +46,7 @@ class AppRouter {
             GoRoute(
                 path: '/accounts', builder: (_, __) => const AccountsScreen()),
             GoRoute(
-                path: '/transfer', builder: (_, __) => const TransferScreen()),
-            GoRoute(
                 path: '/insights', builder: (_, __) => const InsightsScreen()),
-            GoRoute(
-              path: '/firestore-test',
-              builder: (_, __) => FirestoreTestScreen(
-                accountRepository: accountFirestoreRepository,
-                transactionRepository: transactionFirestoreRepository,
-                userRepository: userFirestoreRepository,
-              ),
-            ),
           ],
         ),
       ],
@@ -93,7 +81,7 @@ class _MainShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: _BubbleNavBar(
+      bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) {
           switch (i) {
