@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
 
 class PasswordRequirementTile extends StatelessWidget {
   final String text;
@@ -20,14 +20,14 @@ class PasswordRequirementTile extends StatelessWidget {
           Icon(
             met ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
             size: 18,
-            color: met ? AppColors.success : AppColors.textSecondary,
+            color: met ? AppColors.success : Colors.black45,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
-                color: met ? AppColors.success : AppColors.textSecondary,
+                color: met ? AppColors.success : Colors.black54,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -38,4 +38,3 @@ class PasswordRequirementTile extends StatelessWidget {
     );
   }
 }
-

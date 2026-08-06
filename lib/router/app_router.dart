@@ -10,24 +10,30 @@ import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
 import '../features/transfers/ui/transfer_screen.dart';
 import '../features/insights/ui/insights_screen.dart';
+import '../screens/welcome_screen.dart'; // <--- 1. I-import ang WelcomeScreen (ayusin ang path kung kinakailangan)
 
 class AppRouter {
   static GoRouter createRouter({required AuthBloc authBloc}) {
     return GoRouter(
-      initialLocation: '/home',
+      initialLocation: '/', // <--- 2. Gawing root ('/') ang initial location
       refreshListenable: _BlocListenable(authBloc),
 
       redirect: (context, state) {
         final authState = authBloc.state;
+        final isWelcome = state.matchedLocation == '/';
         final isLogin = state.matchedLocation == '/login';
         final isSignup = state.matchedLocation == '/signup';
 
-        if (authState is AuthUnauthenticated && !isLogin && !isSignup) return '/login';
-        if (authState is AuthAuthenticated && (isLogin || isSignup)) return '/home';
+        // <--- 3. Payagang manatili sa '/' (Welcome Screen) kahit unauthenticated
+        if (authState is AuthUnauthenticated && !isWelcome && !isLogin && !isSignup) return '/';
+        if (authState is AuthUnauthenticated && isWelcome) return null; 
+        
+        if (authState is AuthAuthenticated && (isLogin || isSignup || isWelcome)) return '/home';
         return null;
       },
 
       routes: [
+        GoRoute(path: '/', builder: (_, __) => const WelcomeScreen()), // <--- 4. Idagdag ang Welcome Screen route dito
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
         ShellRoute(

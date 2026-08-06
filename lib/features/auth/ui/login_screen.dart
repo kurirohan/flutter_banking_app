@@ -1,185 +1,403 @@
-// PayMaye — Login Screen with PKCE OAuth flow
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import '../bloc/auth_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../widgets/custom_text_field.dart';
+import '../../../widgets/password_requirement_tile.dart';
+import '../../../screens/welcome_screen.dart';
+import '../bloc/auth_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatelessWidget {
+enum ValidationState { normal, valid, invalid, focused }
+
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
+  bool _rememberMe = false;
+  bool _obscurePassword = true;
+  bool _submitted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_refresh);
+    _passwordController.addListener(_refresh);
+    _emailFocus.addListener(_refresh);
+    _passwordFocus.addListener(_refresh);
+  }
+
+  void _refresh() => setState(() {});
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
+  bool get _isEmailValid {
+    final text = _emailController.text.trim();
+    if (text.isEmpty) return false;
+
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._-]{4,}$');
+
+    return emailRegex.hasMatch(text) || usernameRegex.hasMatch(text);
+  }
+
+  bool get _hasMinLength => _passwordController.text.length >= 8;
+  bool get _hasUppercase => RegExp(r'[A-Z]').hasMatch(_passwordController.text);
+  bool get _hasLowercase => RegExp(r'[a-z]').hasMatch(_passwordController.text);
+  bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordController.text);
+  bool get _hasSpecial =>
+      RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-\\/\[\]=+;]')
+          .hasMatch(_passwordController.text);
+
+  bool get _isPasswordValid =>
+      _hasMinLength &&
+      _hasUppercase &&
+      _hasLowercase &&
+      _hasNumber &&
+      _hasSpecial;
+
+  Color get _neutralBorder => Colors.grey.shade300;
+  Color get _mutedText => Colors.grey.shade600;
+
+  ValidationState _emailState() {
+    if (_emailFocus.hasFocus) return ValidationState.focused;
+    if (_emailController.text.isEmpty) return ValidationState.normal;
+    return _isEmailValid ? ValidationState.valid : ValidationState.invalid;
+  }
+
+  ValidationState _passwordState() {
+    if (_passwordFocus.hasFocus) return ValidationState.focused;
+    if (_passwordController.text.isEmpty) return ValidationState.normal;
+    return _isPasswordValid ? ValidationState.valid : ValidationState.invalid;
+  }
+
+  Color _borderColor(ValidationState state) {
+    switch (state) {
+      case ValidationState.valid:
+        return AppColors.success;
+      case ValidationState.invalid:
+        return AppColors.error;
+      case ValidationState.focused:
+        return AppColors.authGradientEnd;
+      case ValidationState.normal:
+        return _neutralBorder;
+    }
+  }
+
+  void _login() {
+    setState(() {
+      _submitted = true;
+    });
+
+    if (_isEmailValid && _isPasswordValid) {
+      // Dispatch to AuthBloc instead of navigating directly.
+      // The router's redirect will send us to /home once
+      // AuthBloc emits AuthAuthenticated.
+      context.read<AuthBloc>().add(const AuthLoginRequested());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (_, curr) => curr is AuthFailure,
-      listener: (context, state) {
-        if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.authBackground,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              children: [
-                const Spacer(),
-                // Logo, with a soft yellow accent blob behind it
-                // (matches the "Good morning" avatar treatment in the
-                // reference UI kit).
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: Stack(
-                    alignment: Alignment.center,
+    final theme = Theme.of(context);
+
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: PayMayeTheme.authInputDecorationTheme,
+      ),
+      child: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.authBackground,
+          body: Stack(
+            children: [
+              const _AuthBackgroundDecor(),
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          width: 76,
-                          height: 76,
-                          decoration: const BoxDecoration(
-                            color: AppColors.authAccentYellow,
-                            shape: BoxShape.circle,
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Container(
+                            height: 56,
+                            width: 56,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              gradient: const LinearGradient(
+                                colors: AppColors.authGradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.authGradientEnd.withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
                           ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'PayMaye',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 42),
+
+                      Text(
+                        'Welcome back',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Securely access your account with a clean and protected sign in experience.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.78),
+                          height: 1.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
                       Container(
-                        width: 80,
-                        height: 80,
+                        padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.authGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.large),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.cardLarge),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.authGradientEnd.withOpacity(0.4),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                              color: Colors.black.withOpacity(0.16),
+                              blurRadius: 28,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Center(
-                          child: Text('P',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                              )),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomTextField(
+                              controller: _emailController,
+                              focusNode: _emailFocus,
+                              label: 'Username or Email',
+                              hint: 'Enter username or email',
+                              icon: Icons.person_outline_rounded,
+                              borderColor: _borderColor(_emailState()),
+                            ),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              controller: _passwordController,
+                              focusNode: _passwordFocus,
+                              label: 'Password',
+                              hint: 'Enter your password',
+                              icon: Icons.lock_outline_rounded,
+                              obscureText: _obscurePassword,
+                              borderColor: _borderColor(_passwordState()),
+                              suffix: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: _mutedText,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            PasswordRequirementTile(
+                              text: 'At least 8 characters',
+                              met: _hasMinLength,
+                            ),
+                            PasswordRequirementTile(
+                              text: 'Contains uppercase and lowercase letters',
+                              met: _hasUppercase && _hasLowercase,
+                            ),
+                            PasswordRequirementTile(
+                              text: 'Contains at least one number',
+                              met: _hasNumber,
+                            ),
+                            PasswordRequirementTile(
+                              text: 'Contains at least one special character',
+                              met: _hasSpecial,
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 0.95,
+                                  child: Checkbox(
+                                    value: _rememberMe,
+                                    activeColor: AppColors.authGradientEnd,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    'Remember me',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {},
+                                  child: const Text(
+                                    'Forgot password?',
+                                    style: TextStyle(
+                                      color: AppColors.authGradientEnd,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            if (_submitted && (!_isEmailValid || !_isPasswordValid))
+                              Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 14),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                                  border: Border.all(
+                                    color: AppColors.error.withOpacity(0.25),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Please enter a valid username/email and a strong password.',
+                                  style: TextStyle(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: AppColors.authGradient,
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(AppRadius.button),
+                                ),
+                                child: BlocBuilder<AuthBloc, AuthState>(
+                                  builder: (context, state) {
+                                    final isLoading = state is AuthLoginInProgress;
+                                    return ElevatedButton(
+                                      onPressed: isLoading ? null : _login,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(AppRadius.button),
+                                        ),
+                                      ),
+                                      child: isLoading
+                                          ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                              ),
+                                            )
+                                          : const Text('Log In'),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  context.go('/signup');
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: AppColors.authGradientEnd,
+                                    width: 1.4,
+                                  ),
+                                  foregroundColor: AppColors.authGradientEnd,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppRadius.button),
+                                  ),
+                                ),
+                                child: const Text('Sign Up'),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text('PayMaye',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('Secure mobile banking',
-                    style: TextStyle(color: Colors.white60, fontSize: 16)),
-                const Spacer(),
-                // Features
-                const _FeatureRow(icon: Icons.security, text: 'Bank-level security & encryption'),
-                const SizedBox(height: 16),
-                const _FeatureRow(icon: Icons.speed, text: 'Instant transfers & payments'),
-                const SizedBox(height: 16),
-                const _FeatureRow(icon: Icons.bar_chart, text: 'AI-powered spending insights'),
-                const Spacer(),
-                // Login button — gradient pill matching the reference palette
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    final isLoading = state is AuthLoginInProgress;
-                    return Container(
-                      width: double.infinity,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: AppColors.authGradient,
-                        ),
-                        borderRadius: BorderRadius.circular(AppRadius.button),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.authGradientEnd.withOpacity(0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                          onTap: isLoading
-                              ? null
-                              : () => context
-                                  .read<AuthBloc>()
-                                  .add(const AuthLoginRequested()),
-                          child: Center(
-                            child: isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation(Colors.white)),
-                                  )
-                                : const Text('Sign in with PayMaye ID',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16)),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Sign up link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(color: Colors.white60, fontSize: 14),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/signup'),
-                      child: const Text(
-                        'Create one',
-                        style: TextStyle(
-                          color: AppColors.authAccentYellow,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.authAccentYellow,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Protected by OAuth 2.0 + PKCE',
-                  style: TextStyle(color: Colors.white38, fontSize: 12),
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -187,26 +405,49 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class _FeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _FeatureRow({required this.icon, required this.text});
+class _AuthBackgroundDecor extends StatelessWidget {
+  const _AuthBackgroundDecor();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Stack(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppRadius.avatarSquare),
+        Positioned(
+          top: -70,
+          right: -50,
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.authAccentYellow,
+            ),
           ),
-          child: Icon(icon, color: Colors.white, size: 20),
         ),
-        const SizedBox(width: 16),
-        Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
+        Positioned(
+          top: 180,
+          left: -60,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.authGradientStart.withOpacity(0.18),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 60,
+          right: -40,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.authGradientEnd.withOpacity(0.18),
+            ),
+          ),
+        ),
       ],
     );
   }

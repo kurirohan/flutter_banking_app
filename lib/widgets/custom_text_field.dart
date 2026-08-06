@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_radius.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -25,26 +26,29 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 8),
         AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(color: borderColor, width: 1.4),
             boxShadow: [
               BoxShadow(
-                color: borderColor.withValues(alpha: 0.08),
+                color: borderColor.withOpacity(0.08),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -55,13 +59,18 @@ class CustomTextField extends StatelessWidget {
             focusNode: focusNode,
             obscureText: obscureText,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: Colors.black87,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: AppColors.textSecondary),
-              prefixIcon: Icon(icon, color: AppColors.textSecondary),
+              hintStyle: const TextStyle(
+                color: Colors.black45,
+              ),
+              prefixIcon: Icon(
+                icon,
+                color: AppColors.secondary,
+              ),
               suffixIcon: suffix,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -75,4 +84,3 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
-
