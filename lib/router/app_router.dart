@@ -7,37 +7,58 @@ import '../core/theme/app_radius.dart';
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
 import '../features/auth/ui/signup_screen.dart';
+import '../repositories/account_firestore_repository.dart';
+import '../repositories/transaction_firestore_repository.dart';
+import '../repositories/user_firestore_repository.dart';
+import '../features/firestore_test/ui/firestore_test_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
 import '../features/transfers/ui/transfer_screen.dart';
 import '../features/insights/ui/insights_screen.dart';
 
 class AppRouter {
-  static GoRouter createRouter({required AuthBloc authBloc}) {
+  static GoRouter createRouter({
+    required AuthBloc authBloc,
+    required AccountFirestoreRepository accountFirestoreRepository,
+    required TransactionFirestoreRepository transactionFirestoreRepository,
+    required UserFirestoreRepository userFirestoreRepository,
+  }) {
     return GoRouter(
-      initialLocation: '/home',
+      initialLocation: '/firestore-test',
       refreshListenable: _BlocListenable(authBloc),
-
       redirect: (context, state) {
         final authState = authBloc.state;
         final isLogin = state.matchedLocation == '/login';
         final isSignup = state.matchedLocation == '/signup';
 
-        if (authState is AuthUnauthenticated && !isLogin && !isSignup) return '/login';
-        if (authState is AuthAuthenticated && (isLogin || isSignup)) return '/home';
+        if (authState is AuthUnauthenticated && !isLogin && !isSignup)
+          return '/login';
+        if (authState is AuthAuthenticated && (isLogin || isSignup))
+          return '/home';
         return null;
       },
-
       routes: [
         GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
         ShellRoute(
-          builder: (_, state, child) => _MainShell(location: state.matchedLocation, child: child),
+          builder: (_, state, child) =>
+              _MainShell(child: child, location: state.matchedLocation),
           routes: [
             GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-            GoRoute(path: '/accounts', builder: (_, __) => const AccountsScreen()),
-            GoRoute(path: '/transfer', builder: (_, __) => const TransferScreen()),
-            GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
+            GoRoute(
+                path: '/accounts', builder: (_, __) => const AccountsScreen()),
+            GoRoute(
+                path: '/transfer', builder: (_, __) => const TransferScreen()),
+            GoRoute(
+                path: '/insights', builder: (_, __) => const InsightsScreen()),
+            GoRoute(
+              path: '/firestore-test',
+              builder: (_, __) => FirestoreTestScreen(
+                accountRepository: accountFirestoreRepository,
+                transactionRepository: transactionFirestoreRepository,
+                userRepository: userFirestoreRepository,
+              ),
+            ),
           ],
         ),
       ],
@@ -58,7 +79,11 @@ class _MainShell extends StatelessWidget {
 
   static const _destinations = [
     (icon: Icons.home_rounded, label: 'Home', path: '/home'),
-    (icon: Icons.account_balance_wallet_rounded, label: 'Accounts', path: '/accounts'),
+    (
+      icon: Icons.account_balance_wallet_rounded,
+      label: 'Accounts',
+      path: '/accounts'
+    ),
     (icon: Icons.send_rounded, label: 'Transfer', path: '/transfer'),
     (icon: Icons.pie_chart_rounded, label: 'Insights', path: '/insights'),
   ];
@@ -70,8 +95,36 @@ class _MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: _BubbleNavBar(
         selectedIndex: _index,
-        destinations: _destinations,
-        onSelected: (i) => context.go(_destinations[i].path),
+        onDestinationSelected: (i) {
+          switch (i) {
+            case 0:
+              context.go('/home');
+            case 1:
+              context.go('/accounts');
+            case 2:
+              context.go('/transfer');
+            case 3:
+              context.go('/insights');
+          }
+        },
+        destinations: const [
+          NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home'),
+          NavigationDestination(
+              icon: Icon(Icons.account_balance_outlined),
+              selectedIcon: Icon(Icons.account_balance),
+              label: 'Accounts'),
+          NavigationDestination(
+              icon: Icon(Icons.send_outlined),
+              selectedIcon: Icon(Icons.send),
+              label: 'Transfer'),
+          NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart),
+              label: 'Insights'),
+        ],
       ),
     );
   }

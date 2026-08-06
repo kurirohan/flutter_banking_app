@@ -4,41 +4,57 @@
 //       -> review -> submit -> success/failed
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../accounts/data/account_repository.dart';
+import '../../../models/account.dart';
 import '../data/transfer_repository.dart';
 
 // Events
 abstract class TransferEvent extends Equatable {
   const TransferEvent();
-  @override List<Object?> get props => [];
+  @override
+  List<Object?> get props => [];
 }
+
 class TransferAccountSelected extends TransferEvent {
   final Account account;
   const TransferAccountSelected(this.account);
-  @override List<Object?> get props => [account.id];
+  @override
+  List<Object?> get props => [account.id];
 }
+
 class TransferBeneficiarySelected extends TransferEvent {
   final Beneficiary beneficiary;
   const TransferBeneficiarySelected(this.beneficiary);
-  @override List<Object?> get props => [beneficiary.id];
+  @override
+  List<Object?> get props => [beneficiary.id];
 }
+
 class TransferAmountSet extends TransferEvent {
   final double amount;
   const TransferAmountSet(this.amount);
-  @override List<Object?> get props => [amount];
+  @override
+  List<Object?> get props => [amount];
 }
+
 class TransferReferenceSet extends TransferEvent {
   final String? reference;
   const TransferReferenceSet(this.reference);
-  @override List<Object?> get props => [reference];
+  @override
+  List<Object?> get props => [reference];
 }
-class TransferSubmitted extends TransferEvent { const TransferSubmitted(); }
-class TransferReset extends TransferEvent { const TransferReset(); }
+
+class TransferSubmitted extends TransferEvent {
+  const TransferSubmitted();
+}
+
+class TransferReset extends TransferEvent {
+  const TransferReset();
+}
 
 // States
 abstract class TransferState extends Equatable {
   const TransferState();
-  @override List<Object?> get props => [];
+  @override
+  List<Object?> get props => [];
 }
 
 /// Step 1: pick which account to send from.
@@ -56,15 +72,18 @@ class TransferSelectingBeneficiary extends TransferState {
     this.beneficiaries = const [],
     this.isLoading = false,
   });
-  @override List<Object?> get props => [account.id, beneficiaries, isLoading];
+  @override
+  List<Object?> get props => [account.id, beneficiaries, isLoading];
 }
 
 /// Step 3: enter the amount (and optional reference).
 class TransferEnteringAmount extends TransferState {
   final Account account;
   final Beneficiary beneficiary;
-  const TransferEnteringAmount({required this.account, required this.beneficiary});
-  @override List<Object?> get props => [account.id, beneficiary.id];
+  const TransferEnteringAmount(
+      {required this.account, required this.beneficiary});
+  @override
+  List<Object?> get props => [account.id, beneficiary.id];
 }
 
 /// Step 4: review before confirming.
@@ -79,10 +98,13 @@ class TransferReadyToSubmit extends TransferState {
     required this.amount,
     this.reference,
   });
-  @override List<Object?> get props => [account.id, beneficiary.id, amount, reference];
+  @override
+  List<Object?> get props => [account.id, beneficiary.id, amount, reference];
 }
 
-class TransferInProgress extends TransferState { const TransferInProgress(); }
+class TransferInProgress extends TransferState {
+  const TransferInProgress();
+}
 
 class TransferSuccess extends TransferState {
   final Account account;
@@ -90,20 +112,16 @@ class TransferSuccess extends TransferState {
   final double amount;
   final String? reference;
   final TransferResult result;
-  const TransferSuccess({
-    required this.account,
-    required this.beneficiary,
-    required this.amount,
-    required this.reference,
-    required this.result,
-  });
-  @override List<Object?> get props => [result.transferId];
+  const TransferSuccess(this.result);
+  @override
+  List<Object?> get props => [result.transferId];
 }
 
 class TransferFailed extends TransferState {
   final String reason;
   const TransferFailed(this.reason);
-  @override List<Object?> get props => [reason];
+  @override
+  List<Object?> get props => [reason];
 }
 
 // BLoC
@@ -136,10 +154,12 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     }
   }
 
-  void _onBeneficiary(TransferBeneficiarySelected e, Emitter<TransferState> emit) {
+  void _onBeneficiary(
+      TransferBeneficiarySelected e, Emitter<TransferState> emit) {
     final current = state;
     if (current is TransferSelectingBeneficiary) {
-      emit(TransferEnteringAmount(account: current.account, beneficiary: e.beneficiary));
+      emit(TransferEnteringAmount(
+          account: current.account, beneficiary: e.beneficiary));
     }
   }
 
@@ -166,7 +186,8 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
     }
   }
 
-  Future<void> _onSubmit(TransferSubmitted e, Emitter<TransferState> emit) async {
+  Future<void> _onSubmit(
+      TransferSubmitted e, Emitter<TransferState> emit) async {
     final current = state;
     if (current is! TransferReadyToSubmit) return;
 

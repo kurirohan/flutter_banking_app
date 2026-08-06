@@ -2,9 +2,9 @@
 // Choose Account -> Choose Recipient -> Enter Amount -> Review -> Success
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '/models/account.dart';
 import 'package:go_router/go_router.dart';
 import '../../accounts/bloc/account_bloc.dart';
-import '../../accounts/data/account_repository.dart';
 import '../../../shared/utils/currency_formatter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -18,7 +18,8 @@ class TransferScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TransferBloc, TransferState>(
-      listenWhen: (_, curr) => curr is TransferSuccess || curr is TransferFailed,
+      listenWhen: (_, curr) =>
+          curr is TransferSuccess || curr is TransferFailed,
       listener: (context, state) {
         if (state is TransferSuccess) {
           // Apply the transfer to local account state: debit the balance
@@ -52,7 +53,8 @@ class TransferScreen extends StatelessWidget {
           _showSuccessDialog(context, state);
         } else if (state is TransferFailed) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.reason), backgroundColor: AppColors.error),
+            SnackBar(
+                content: Text(state.reason), backgroundColor: AppColors.error),
           );
         }
       },
@@ -82,14 +84,20 @@ class TransferScreen extends StatelessWidget {
         _BeneficiaryStep(beneficiaries: beneficiaries, isLoading: isLoading),
       TransferEnteringAmount(:final beneficiary) =>
         _AmountStep(beneficiary: beneficiary),
-      TransferReadyToSubmit(:final account, :final beneficiary, :final amount, :final reference) =>
+      TransferReadyToSubmit(
+        :final account,
+        :final beneficiary,
+        :final amount,
+        :final reference
+      ) =>
         _ReviewStep(
             account: account,
             beneficiary: beneficiary,
             amount: amount,
             reference: reference),
       TransferInProgress() => const _LoadingStep(),
-      TransferSuccess() || TransferFailed() =>
+      TransferSuccess() ||
+      TransferFailed() =>
         const Center(child: Text('Done')),
       // Catch-all: TransferState isn't sealed, so the analyzer can't prove
       // the cases above are exhaustive on their own. This keeps the UI safe
@@ -105,8 +113,9 @@ class TransferScreen extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.dialog)),
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.dialog)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -115,11 +124,15 @@ class TransferScreen extends StatelessWidget {
               height: 76,
               decoration: const BoxDecoration(
                   color: AppColors.successBackground, shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, color: AppColors.success, size: 44),
+              child: const Icon(Icons.check_circle,
+                  color: AppColors.success, size: 44),
             ),
             const SizedBox(height: AppSpacing.lg),
             const Text('Transfer successful!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink)),
             const SizedBox(height: AppSpacing.xs),
             Text(
               result.rail == 'INSTANT'
@@ -138,10 +151,14 @@ class TransferScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _ReceiptRow('Amount', CurrencyFormatter.format(state.amount, currency: state.account.currency)),
+                  _ReceiptRow(
+                      'Amount',
+                      CurrencyFormatter.format(state.amount,
+                          currency: state.account.currency)),
                   _ReceiptRow('From', state.account.name),
                   _ReceiptRow('To', state.beneficiary.name),
-                  if (state.reference != null) _ReceiptRow('Note', state.reference!),
+                  if (state.reference != null)
+                    _ReceiptRow('Note', state.reference!),
                   _ReceiptRow('Reference', reference, isLast: true),
                 ],
               ),
@@ -193,13 +210,17 @@ class _ReceiptRow extends StatelessWidget {
             ),
       child: Row(
         children: [
-          Text(label, style: const TextStyle(color: AppColors.inkMuted, fontSize: 13)),
+          Text(label,
+              style: const TextStyle(color: AppColors.inkMuted, fontSize: 13)),
           const Spacer(),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.ink),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.ink),
             ),
           ),
         ],
@@ -218,7 +239,8 @@ class _AccountStep extends StatelessWidget {
     return BlocBuilder<AccountBloc, AccountState>(
       builder: (context, state) {
         if (state is! AccountLoaded) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.violet));
+          return const Center(
+              child: CircularProgressIndicator(color: AppColors.violet));
         }
         if (state.accounts.isEmpty) {
           return const Center(child: Text('No accounts available'));
@@ -227,14 +249,16 @@ class _AccountStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Text('Send from', style: Theme.of(context).textTheme.titleLarge),
+              padding: const EdgeInsets.all(20),
+              child: Text('Send from',
+                  style: Theme.of(context).textTheme.titleLarge),
             ),
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 itemCount: state.accounts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.md),
                 itemBuilder: (context, i) {
                   final acc = state.accounts[i];
                   return _AccountTile(
@@ -277,7 +301,8 @@ class _AccountTile extends StatelessWidget {
                   color: AppColors.fog,
                   borderRadius: BorderRadius.circular(AppRadius.input),
                 ),
-                child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.violet),
+                child: const Icon(Icons.account_balance_wallet,
+                    color: AppColors.primary),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -285,19 +310,24 @@ class _AccountTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(account.name,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.ink)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 15)),
                     const SizedBox(height: 2),
                     Text(account.accountNumber,
-                        style: const TextStyle(color: AppColors.inkFaint, fontSize: 12)),
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 12)),
                   ],
                 ),
               ),
               Text(
-                CurrencyFormatter.format(account.availableBalance, currency: account.currency),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.ink),
+                CurrencyFormatter.format(account.availableBalance,
+                    currency: account.currency),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.inkFaint),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.inkFaint),
             ],
           ),
         ),
@@ -310,7 +340,8 @@ class _AccountTile extends StatelessWidget {
 class _BeneficiaryStep extends StatelessWidget {
   final List<Beneficiary> beneficiaries;
   final bool isLoading;
-  const _BeneficiaryStep({required this.beneficiaries, required this.isLoading});
+  const _BeneficiaryStep(
+      {required this.beneficiaries, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
@@ -333,16 +364,20 @@ class _BeneficiaryStep extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.violet))
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.violet))
               : beneficiaries.isEmpty
                   ? const Center(child: Text('No beneficiaries yet'))
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                       itemCount: beneficiaries.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, i) {
                         final b = beneficiaries[i];
-                        final pair = AppColors.pastelPalette[i % AppColors.pastelPalette.length];
+                        final pair = AppColors
+                            .pastelPalette[i % AppColors.pastelPalette.length];
                         return Material(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -360,24 +395,30 @@ class _BeneficiaryStep extends StatelessWidget {
                                     backgroundColor: pair[0],
                                     child: Text(b.name[0],
                                         style: TextStyle(
-                                            color: pair[1], fontWeight: FontWeight.w800)),
+                                            color: pair[1],
+                                            fontWeight: FontWeight.w800)),
                                   ),
                                   const SizedBox(width: AppSpacing.md),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(b.name,
                                             style: const TextStyle(
-                                                fontWeight: FontWeight.w700, color: AppColors.ink)),
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.ink)),
                                         const SizedBox(height: 2),
-                                        Text('${b.bankName} · ${b.accountNumber}',
+                                        Text(
+                                            '${b.bankName} · ${b.accountNumber}',
                                             style: const TextStyle(
-                                                color: AppColors.inkFaint, fontSize: 12)),
+                                                color: AppColors.inkFaint,
+                                                fontSize: 12)),
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.chevron_right_rounded, color: AppColors.inkFaint),
+                                  const Icon(Icons.chevron_right_rounded,
+                                      color: AppColors.inkFaint),
                                 ],
                               ),
                             ),
@@ -411,10 +452,12 @@ class _AmountStepState extends State<_AmountStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Sending to', style: TextStyle(color: AppColors.inkMuted, fontSize: 13)),
+          const Text('Sending to',
+              style: TextStyle(color: AppColors.inkMuted, fontSize: 13)),
           const SizedBox(height: 4),
           Text(widget.beneficiary.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Text(widget.beneficiary.bankName,
               style: const TextStyle(color: AppColors.inkFaint)),
           const SizedBox(height: AppSpacing.huge),
@@ -422,7 +465,10 @@ class _AmountStepState extends State<_AmountStep> {
             child: Text(
               CurrencyFormatter.format(_amount),
               style: const TextStyle(
-                  fontSize: 46, fontWeight: FontWeight.w800, letterSpacing: -1, color: AppColors.ink),
+                  fontSize: 46,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                  color: AppColors.ink),
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -450,10 +496,13 @@ class _AmountStepState extends State<_AmountStep> {
           ElevatedButton(
             onPressed: _amount > 0
                 ? () {
-                    context.read<TransferBloc>().add(TransferAmountSet(_amount));
+                    context
+                        .read<TransferBloc>()
+                        .add(TransferAmountSet(_amount));
                     if (_referenceController.text.isNotEmpty) {
-                      context.read<TransferBloc>().add(
-                          TransferReferenceSet(_referenceController.text));
+                      context
+                          .read<TransferBloc>()
+                          .add(TransferReferenceSet(_referenceController.text));
                     }
                   }
                 : null,
@@ -484,27 +533,16 @@ class _ReviewStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Review transfer', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xl),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            ),
-            child: Column(
-              children: [
-                _ReviewRow('From', '${account.name} (${account.accountNumber})'),
-                _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
-                _ReviewRow('To', beneficiary.name),
-                _ReviewRow('Bank', beneficiary.bankName),
-                _ReviewRow('Account', beneficiary.accountNumber),
-                if (reference != null) _ReviewRow('Reference', reference!),
-                _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours', isLast: true),
-              ],
-            ),
-          ),
+          Text('Review Transfer',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 24),
+          _ReviewRow('From', '${account.name} (${account.accountNumber})'),
+          _ReviewRow('Amount', '${CurrencyFormatter.format(amount)} PHP'),
+          _ReviewRow('To', beneficiary.name),
+          _ReviewRow('Bank', beneficiary.bankName),
+          _ReviewRow('Account', beneficiary.accountNumber),
+          if (reference != null) _ReviewRow('Reference', reference!),
+          _ReviewRow('Processing', amount < 1000 ? '⚡ Instant' : '🕐 24 hours'),
           const Spacer(),
           const Text(
             'By tapping Confirm, you authorise this payment.',
@@ -541,7 +579,9 @@ class _ReviewRow extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(color: AppColors.inkMuted)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700, color: AppColors.ink)),
         ],
       ),
     );

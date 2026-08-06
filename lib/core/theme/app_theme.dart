@@ -64,8 +64,7 @@ class PayMayeTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.violet,
-          textStyle:
-              GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -90,8 +89,8 @@ class PayMayeTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.card)),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
@@ -109,8 +108,7 @@ class PayMayeTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.fog,
         selectedColor: AppColors.violet,
-        labelStyle:
-            GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+        labelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.chip)),
         side: BorderSide.none,
@@ -149,8 +147,8 @@ class PayMayeTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.darkSurface,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.card)),
       ),
     );
   }
@@ -171,7 +169,8 @@ class PayMayeTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.input),
-        borderSide: const BorderSide(color: AppColors.authGradientEnd, width: 2),
+        borderSide:
+            const BorderSide(color: AppColors.authGradientEnd, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
@@ -188,21 +187,27 @@ class PayMayeTheme {
 
     return base.copyWith(
       displayLarge: base.displayLarge?.copyWith(
-          fontSize: 40, fontWeight: FontWeight.w800, color: baseColor, letterSpacing: -1),
+          fontSize: 40,
+          fontWeight: FontWeight.w800,
+          color: baseColor,
+          letterSpacing: -1),
       displayMedium: base.displayMedium?.copyWith(
-          fontSize: 32, fontWeight: FontWeight.w800, color: baseColor, letterSpacing: -0.5),
-      headlineLarge: base.headlineLarge
-          ?.copyWith(fontSize: 26, fontWeight: FontWeight.w800, color: baseColor),
-      headlineMedium: base.headlineMedium
-          ?.copyWith(fontSize: 22, fontWeight: FontWeight.w800, color: baseColor),
-      titleLarge: base.titleLarge
-          ?.copyWith(fontSize: 18, fontWeight: FontWeight.w700, color: baseColor),
-      titleMedium: base.titleMedium
-          ?.copyWith(fontSize: 16, fontWeight: FontWeight.w600, color: baseColor),
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: baseColor,
+          letterSpacing: -0.5),
+      headlineLarge: base.headlineLarge?.copyWith(
+          fontSize: 26, fontWeight: FontWeight.w800, color: baseColor),
+      headlineMedium: base.headlineMedium?.copyWith(
+          fontSize: 22, fontWeight: FontWeight.w800, color: baseColor),
+      titleLarge: base.titleLarge?.copyWith(
+          fontSize: 18, fontWeight: FontWeight.w700, color: baseColor),
+      titleMedium: base.titleMedium?.copyWith(
+          fontSize: 16, fontWeight: FontWeight.w600, color: baseColor),
       bodyLarge: base.bodyLarge?.copyWith(fontSize: 16, color: baseColor),
       bodyMedium: base.bodyMedium?.copyWith(fontSize: 14, color: mutedColor),
-      labelLarge: base.labelLarge
-          ?.copyWith(fontSize: 14, fontWeight: FontWeight.w700, color: baseColor),
+      labelLarge: base.labelLarge?.copyWith(
+          fontSize: 14, fontWeight: FontWeight.w700, color: baseColor),
       labelMedium: base.labelMedium?.copyWith(fontSize: 12, color: mutedColor),
     );
   }
