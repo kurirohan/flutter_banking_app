@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/auth/auth_service.dart';
+import 'core/network/dio_client.dart';
 import 'core/storage/secure_token_store.dart';
 import 'core/theme/app_theme.dart';
 import 'features/accounts/bloc/account_bloc.dart';
@@ -35,6 +36,10 @@ void main() async {
   // Initialize dependencies
   final tokenStore = SecureTokenStore();
   final authService = AuthService(tokenStore);
+  final apiClient = ApiClient(
+    getAccessToken: authService.getValidAccessToken,
+    onUnauthorized: authService.logout,
+  );
 
   // Repositories — both backed by one shared MockBankDataSource instance,
   // so a transfer applied through TransferRepository is immediately visible

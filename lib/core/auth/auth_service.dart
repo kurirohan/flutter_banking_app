@@ -84,6 +84,31 @@ class AuthService {
     return tokens;
   }
 
+  /// Mock username/password sign-in.
+  ///
+  /// NOTE: real backends should NOT use the OAuth "Resource Owner
+  /// Password Credentials" grant (Keycloak and OAuth 2.1 both deprecate
+  /// it) — swap this for a call to your own login endpoint that returns
+  /// tokens after verifying the credentials server-side.
+  Future<OAuthTokens> loginWithPassword({
+    required String username,
+    required String password,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (username.isEmpty || password.isEmpty) {
+      throw Exception('Invalid username or password');
+    }
+    final tokens = OAuthTokens(
+      accessToken: 'mock_access_token_${DateTime.now().millisecondsSinceEpoch}',
+      refreshToken: 'mock_refresh_token',
+      idToken: 'mock_id_token',
+      expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+    );
+    await _store.saveTokens(tokens);
+    _cached = tokens;
+    return tokens;
+  }
+
   Future<String> getValidAccessToken() async {
     final tokens = _cached ?? await _store.loadTokens();
     if (tokens == null) throw Exception('Not authenticated');

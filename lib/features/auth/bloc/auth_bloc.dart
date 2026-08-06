@@ -10,6 +10,12 @@ abstract class AuthEvent extends Equatable {
 }
 class AuthCheckRequested extends AuthEvent { const AuthCheckRequested(); }
 class AuthLoginRequested extends AuthEvent { const AuthLoginRequested(); }
+class AuthCredentialsLoginRequested extends AuthEvent {
+  final String username;
+  final String password;
+  const AuthCredentialsLoginRequested({required this.username, required this.password});
+  @override List<Object?> get props => [username, password];
+}
 class AuthCallbackReceived extends AuthEvent {
   final String code;
   final String verifier;
@@ -45,6 +51,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._service) : super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheck);
     on<AuthLoginRequested>(_onLogin);
+    on<AuthCredentialsLoginRequested>(_onCredentialsLogin);
     on<AuthCallbackReceived>(_onCallback);
     on<AuthLogoutRequested>(_onLogout);
   }
@@ -66,6 +73,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Exchange mock code
     try {
       await _service.exchangeCode(code: 'mock_code', verifier: verifier);
+      emit(const AuthAuthenticated(userId: 'user_001'));
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onCredentialsLogin(
+    AuthCredentialsLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoginInProgress());
+    try {
+      await _service.loginWithPassword(
+        username: event.username,
+        password: event.password,
+      );
       emit(const AuthAuthenticated(userId: 'user_001'));
     } catch (e) {
       emit(AuthFailure(e.toString()));

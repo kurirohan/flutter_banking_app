@@ -6,6 +6,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_radius.dart';
 import '../features/auth/bloc/auth_bloc.dart';
 import '../features/auth/ui/login_screen.dart';
+import '../features/auth/ui/signin_screen.dart';
 import '../features/auth/ui/signup_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
@@ -14,35 +15,74 @@ import '../features/insights/ui/insights_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter({required AuthBloc authBloc}) {
-    return GoRouter(
-      initialLocation: '/home',
-      refreshListenable: _BlocListenable(authBloc),
+  return GoRouter(
+    initialLocation: '/home',
+    refreshListenable: _BlocListenable(authBloc),
 
-      redirect: (context, state) {
-        final authState = authBloc.state;
-        final isLogin = state.matchedLocation == '/login';
-        final isSignup = state.matchedLocation == '/signup';
+    redirect: (context, state) {
+      final authState = authBloc.state;
 
-        if (authState is AuthUnauthenticated && !isLogin && !isSignup) return '/login';
-        if (authState is AuthAuthenticated && (isLogin || isSignup)) return '/home';
-        return null;
-      },
+      // Allow all authentication-related pages
+      final isAuthRoute =
+          state.matchedLocation.startsWith('/login') ||
+          state.matchedLocation == '/signup';
 
-      routes: [
-        GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-        GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
-        ShellRoute(
-          builder: (_, state, child) => _MainShell(location: state.matchedLocation, child: child),
-          routes: [
-            GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-            GoRoute(path: '/accounts', builder: (_, __) => const AccountsScreen()),
-            GoRoute(path: '/transfer', builder: (_, __) => const TransferScreen()),
-            GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
-          ],
+      // Unauthenticated users can only access auth pages
+      if (authState is AuthUnauthenticated && !isAuthRoute) {
+        return '/login';
+      }
+
+      // Authenticated users should not go back to auth pages
+      if (authState is AuthAuthenticated && isAuthRoute) {
+        return '/home';
+      }
+
+      return null;
+    },
+
+    routes: [
+      // Authentication
+      GoRoute(
+        path: '/login',
+        builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/login/signin',
+        builder: (_, __) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (_, __) => const SignupScreen(),
+      ),
+
+      // Main app
+      ShellRoute(
+        builder: (_, state, child) => _MainShell(
+          child: child,
+          location: state.matchedLocation,
         ),
-      ],
-    );
-  }
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (_, __) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/accounts',
+            builder: (_, __) => const AccountsScreen(),
+          ),
+          GoRoute(
+            path: '/transfer',
+            builder: (_, __) => const TransferScreen(),
+          ),
+          GoRoute(
+            path: '/insights',
+            builder: (_, __) => const InsightsScreen(),
+          ),
+        ],
+      ),
+    ],
+  );
+}
 }
 
 class _BlocListenable extends ChangeNotifier {
