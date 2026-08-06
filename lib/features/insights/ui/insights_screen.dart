@@ -91,13 +91,13 @@ class _InsightsContentState extends State<_InsightsContent> {
               _StatCard(
                 label: 'Total Spent',
                 value: '₱${widget.state.totalSpent.toStringAsFixed(0)}',
-                color: Colors.red,
+                color: AppColors.error,
               ),
               const SizedBox(width: 12),
               _StatCard(
                 label: 'Total Income',
                 value: '₱${widget.state.totalIncome.toStringAsFixed(0)}',
-                color: Colors.green,
+                color: AppColors.success,
               ),
             ],
           ),
@@ -120,7 +120,16 @@ class _InsightsContentState extends State<_InsightsContent> {
                       color: AppColors.chartPalette[e.key % AppColors.chartPalette.length],
                       radius: isTouched ? 72 : 60,
                       title: isTouched ? '₱${e.value.amount.toStringAsFixed(0)}' : '',
-                      titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      // A plain white title is unreadable on the lighter
+                      // slices (sunshine yellow, inkFaint) in chartPalette.
+                      // A subtle dark shadow keeps it legible against every
+                      // color in the palette without needing a per-slice
+                      // contrast calculation.
+                      titleStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [Shadow(color: Colors.black45, blurRadius: 3)],
+                      ),
                     );
                   }).toList(),
                   pieTouchData: PieTouchData(

@@ -127,7 +127,9 @@ class _Header extends StatelessWidget {
                       fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink)),
             ],
           ),
-          Stack(
+          GestureDetector(
+            onTap: () => context.push('/profile'),
+            child: Stack(
             clipBehavior: Clip.none,
             children: [
               Container(
@@ -171,6 +173,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           ),
         ],
       ),

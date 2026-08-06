@@ -5,9 +5,9 @@ import 'package:crypto/crypto.dart';
 import '../storage/secure_token_store.dart';
 
 class AuthConfig {
-  static const issuer = 'https://auth.nexabank.com/realms/nexa';
-  static const clientId = 'nexabank-mobile';
-  static const redirectUri = 'nexabank://callback';
+  static const issuer = 'https://auth.paymaye.app/realms/paymaye';
+  static const clientId = 'paymaye-mobile';
+  static const redirectUri = 'paymaye://callback';
   static const scopes = ['openid', 'profile', 'email', 'accounts:read', 'payments:write'];
 
   static String get authorizationEndpoint => '$issuer/protocol/openid-connect/auth';

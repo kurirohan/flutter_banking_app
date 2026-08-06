@@ -75,15 +75,15 @@ class LoginScreen extends StatelessWidget {
                       fontSize: 32,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text('Secure mobile banking',
+              const Text('Banking beyond convenience',
                   style: TextStyle(color: Colors.white60, fontSize: 16)),
               const Spacer(),
               // Features
-              const _FeatureRow(icon: Icons.security, text: 'Bank-level security & encryption'),
+              const _FeatureRow(icon: Icons.favorite_rounded, text: 'Built around how you actually spend'),
               const SizedBox(height: 16),
-              const _FeatureRow(icon: Icons.speed, text: 'Instant transfers & payments'),
+              const _FeatureRow(icon: Icons.bolt_rounded, text: 'Send money in a tap, not a wait'),
               const SizedBox(height: 16),
-              const _FeatureRow(icon: Icons.bar_chart, text: 'AI-powered spending insights'),
+              const _FeatureRow(icon: Icons.pie_chart_rounded, text: 'See where every peso goes'),
               const Spacer(),
               // Sign in button — gradient pill, routes to username/password screen
               SizedBox(

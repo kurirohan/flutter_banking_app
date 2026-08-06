@@ -12,6 +12,7 @@ import '../features/home/ui/home_screen.dart';
 import '../features/accounts/ui/accounts_screen.dart';
 import '../features/transfers/ui/transfer_screen.dart';
 import '../features/insights/ui/insights_screen.dart';
+import '../features/profile/ui/profile_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter({required AuthBloc authBloc}) {
@@ -53,6 +54,14 @@ class AppRouter {
       GoRoute(
         path: '/signup',
         builder: (_, __) => const SignupScreen(),
+      ),
+
+      // Profile — outside the ShellRoute on purpose, so it opens as a full
+      // page without the bottom nav bar (consistent with how most banking
+      // apps present account/settings screens).
+      GoRoute(
+        path: '/profile',
+        builder: (_, __) => const ProfileScreen(),
       ),
 
       // Main app
@@ -106,7 +115,11 @@ class _MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
+      // extendBody stays false on purpose: with it on, the body draws full
+      // height *behind* the floating nav bar, which silently hides
+      // bottom-anchored CTA buttons under the bar (untappable, since the
+      // bar sits on top in hit-test order). Scaffold reserves space for
+      // the nav bar instead, so those buttons always land above it.
       body: child,
       bottomNavigationBar: _BubbleNavBar(
         selectedIndex: _index,

@@ -21,7 +21,7 @@ class ValidationException extends AppException {
 
 class ApiClient {
   late final Dio _dio;
-  static const _baseUrl = 'https://api.nexabank.com/v1';
+  static const _baseUrl = 'https://api.paymaye.app/v1';
 
   ApiClient({
     required Future<String> Function() getAccessToken,
