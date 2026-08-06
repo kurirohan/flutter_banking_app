@@ -142,7 +142,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 12),
+                      // Back Button papuntang Welcome Screen
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => context.go('/'),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.small),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
 
                       Row(
                         children: [
