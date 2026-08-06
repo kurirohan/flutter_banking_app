@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Securely access your account with a clean and protected sign in experience.',
+                        'Securely access your account with a clean and protected log in experience.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.white.withOpacity(0.78),
                           height: 1.5,

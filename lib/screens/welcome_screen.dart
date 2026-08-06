@@ -104,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Your money, your way.',
+                        'Banking Beyond Convenience.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: const Color(0xFF64748b),
