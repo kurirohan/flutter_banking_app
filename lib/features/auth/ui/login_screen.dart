@@ -1,8 +1,6 @@
-// PayMaye — Login Screen with PKCE OAuth flow
+// PayMaye — Login Screen
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../bloc/auth_bloc.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 
@@ -11,175 +9,144 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (_, curr) => curr is AuthFailure,
-      listener: (context, state) {
-        if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.authBackground,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              children: [
-                const Spacer(),
-                // Logo, with a soft yellow accent blob behind it
-                // (matches the "Good morning" avatar treatment in the
-                // reference UI kit).
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          width: 76,
-                          height: 76,
-                          decoration: const BoxDecoration(
-                            color: AppColors.authAccentYellow,
-                            shape: BoxShape.circle,
-                          ),
+    return Scaffold(
+      backgroundColor: AppColors.authBackground,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            children: [
+              const Spacer(),
+              // Logo, with a soft yellow accent blob behind it
+              // (matches the "Good morning" avatar treatment in the
+              // reference UI kit).
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        decoration: const BoxDecoration(
+                          color: AppColors.authAccentYellow,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.authGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.large),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.authGradientEnd.withOpacity(0.4),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text('P',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                              )),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text('PayMaye',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('Secure mobile banking',
-                    style: TextStyle(color: Colors.white60, fontSize: 16)),
-                const Spacer(),
-                // Features
-                const _FeatureRow(icon: Icons.security, text: 'Bank-level security & encryption'),
-                const SizedBox(height: 16),
-                const _FeatureRow(icon: Icons.speed, text: 'Instant transfers & payments'),
-                const SizedBox(height: 16),
-                const _FeatureRow(icon: Icons.bar_chart, text: 'AI-powered spending insights'),
-                const Spacer(),
-                // Login button — gradient pill matching the reference palette
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    final isLoading = state is AuthLoginInProgress;
-                    return Container(
-                      width: double.infinity,
-                      height: 56,
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                           colors: AppColors.authGradient,
                         ),
-                        borderRadius: BorderRadius.circular(AppRadius.button),
+                        borderRadius: BorderRadius.circular(AppRadius.large),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.authGradientEnd.withOpacity(0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            color: AppColors.authGradientEnd.withOpacity(0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                          onTap: isLoading
-                              ? null
-                              : () => context
-                                  .read<AuthBloc>()
-                                  .add(const AuthLoginRequested()),
-                          child: Center(
-                            child: isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation(Colors.white)),
-                                  )
-                                : const Text('Sign in with PayMaye ID',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16)),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Sign up link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(color: Colors.white60, fontSize: 14),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/signup'),
-                      child: const Text(
-                        'Create one',
-                        style: TextStyle(
-                          color: AppColors.authAccentYellow,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.authAccentYellow,
-                        ),
+                      child: const Center(
+                        child: Text('P',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                            )),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Protected by OAuth 2.0 + PKCE',
-                  style: TextStyle(color: Colors.white38, fontSize: 12),
+              ),
+              const SizedBox(height: 24),
+              const Text('PayMaye',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Secure mobile banking',
+                  style: TextStyle(color: Colors.white60, fontSize: 16)),
+              const Spacer(),
+              // Features
+              const _FeatureRow(icon: Icons.security, text: 'Bank-level security & encryption'),
+              const SizedBox(height: 16),
+              const _FeatureRow(icon: Icons.speed, text: 'Instant transfers & payments'),
+              const SizedBox(height: 16),
+              const _FeatureRow(icon: Icons.bar_chart, text: 'AI-powered spending insights'),
+              const Spacer(),
+              // Sign in button — gradient pill, routes to username/password screen
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: AppColors.authGradient,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.authGradientEnd.withOpacity(0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                      onTap: () => context.go('/login/signin'),
+                      child: const Center(
+                        child: Text('Sign In',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16)),
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              // Sign up link
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Don't have an account? ",
+                    style: TextStyle(color: Colors.white60, fontSize: 14),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.go('/signup'),
+                    child: const Text(
+                      'Create one',
+                      style: TextStyle(
+                        color: AppColors.authAccentYellow,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.authAccentYellow,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),

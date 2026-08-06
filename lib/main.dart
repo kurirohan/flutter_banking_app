@@ -1,6 +1,3 @@
-// NexaBank — Complete Banking Mobile App
-// BCT Mobile Applications Track — Day 9 Final Build
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
